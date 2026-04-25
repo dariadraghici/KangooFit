@@ -82,7 +82,7 @@
             android:layout_marginTop="32dp"
             android:paddingStart="32dp"
             android:paddingEnd="32dp"
-            android:text="Loghează-te cu alt cont"
+            android:text="Login with other account"
             android:textAllCaps="false"
             android:textColor="#E91E63"
             android:textSize="14sp"

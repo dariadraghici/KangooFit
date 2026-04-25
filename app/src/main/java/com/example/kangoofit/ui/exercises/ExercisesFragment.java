@@ -19,8 +19,8 @@ import com.google.firebase.auth.FirebaseAuth;
 public class ExercisesFragment extends Fragment {
 
     private TextView tvKangarooStateDesc;
-    private ImageView imgKangarooState;
-    private int userLevel = 1; // Nivelul default
+    private ImageView imgKangarooSprite;
+    private int userLevel = 1;
 
     @Nullable
     @Override
@@ -33,7 +33,7 @@ public class ExercisesFragment extends Fragment {
         CardView itemBiceps = view.findViewById(R.id.item_biceps);
         CardView itemShoulder = view.findViewById(R.id.item_shoulder);
         tvKangarooStateDesc = view.findViewById(R.id.tv_kangaroo_state_desc);
-        imgKangarooState = view.findViewById(R.id.img_kangaroo_state);
+        imgKangarooSprite = view.findViewById(R.id.img_kangaroo_sprite);
 
         String uid = FirebaseAuth.getInstance().getUid();
         if (uid != null) {
@@ -41,74 +41,37 @@ public class ExercisesFragment extends Fragment {
                 if (isAdded() && user != null) {
                     userLevel = user.nivel_kangaroo > 0 ? user.nivel_kangaroo : 1;
                     int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
-
                     float overallProgress = KangarooLevel.getOverallProgress(userLevel, stats);
                     updateKangarooStateUI(overallProgress, userLevel);
                 }
             });
         }
 
-        itemFlotari.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
-            intent.putExtra("EXERCISE_TYPE", "PUSHUPS");
-            startActivity(intent);
-        });
-
-        itemGenuflexiuni.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
-            intent.putExtra("EXERCISE_TYPE", "SQUATS");
-            startActivity(intent);
-        });
-
-        itemJumpingJacks.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
-            intent.putExtra("EXERCISE_TYPE", "JUMPING_JACKS");
-            startActivity(intent);
-        });
-
-        itemBiceps.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
-            intent.putExtra("EXERCISE_TYPE", "BICEP_CURLS");
-            startActivity(intent);
-        });
-
-        itemShoulder.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
-            intent.putExtra("EXERCISE_TYPE", "SHOULDER_PRESS");
-            startActivity(intent);
-        });
+        setupClickListeners(itemFlotari, itemGenuflexiuni, itemJumpingJacks, itemBiceps, itemShoulder);
 
         return view;
     }
 
+    private void setupClickListeners(View... views) {
+        String[] types = {"PUSHUPS", "SQUATS", "JUMPING_JACKS", "BICEP_CURLS", "SHOULDER_PRESS"};
+        for (int i = 0; i < views.length; i++) {
+            final String type = types[i];
+            views[i].setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
+                intent.putExtra("EXERCISE_TYPE", type);
+                startActivity(intent);
+            });
+        }
+    }
+
     private void updateKangarooStateUI(float progress, int level) {
         if (!isAdded()) return;
-
-        String mood;
-        String description;
-
-        if (progress < 0.3f) {
-            mood = "sad";
-            description = "Your kangaroo is SAD.\nTime to change that!";
-        } else if (progress < 0.7f) {
-            mood = "neutral";
-            description = "Your kangaroo is NEUTRAL.\nTime to change that!";
-        } else {
-            mood = "happy";
-            description = "Your kangaroo is HAPPY!\nKeep it up!";
-        }
+        String mood = progress < 0.3f ? "sad" : (progress < 0.7f ? "neutral" : "happy");
+        String description = mood.toUpperCase().equals("HAPPY") ? "Your kangaroo is HAPPY!\nKeep it up!" : "Your kangaroo is " + mood.toUpperCase() + ".\nTime to change that!";
 
         tvKangarooStateDesc.setText(description);
-
-        // Construim numele resursei dinamic: kangaroo_mood_level (ex: kangaroo_happy_1)
         String imageName = "kangaroo_" + mood + "_" + level;
         int resId = getResources().getIdentifier(imageName, "drawable", requireContext().getPackageName());
-
-        if (resId != 0) {
-            imgKangarooState.setImageResource(resId);
-        } else {
-            // Fallback în cazul în care imaginea specifică lipsește
-            imgKangarooState.setImageResource(R.drawable.kangaroo_neutral);
-        }
+        imgKangarooSprite.setImageResource(resId != 0 ? resId : R.drawable.kangaroo_neutral);
     }
 }

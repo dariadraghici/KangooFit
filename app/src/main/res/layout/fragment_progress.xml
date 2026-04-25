@@ -62,9 +62,10 @@
                         android:background="@android:color/transparent">
 
                         <TextView
+                            android:id="@+id/txtState"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Stare: HAPPY"
+                            android:text="State: LOADING"
                             android:layout_marginTop="8dp"
                             android:paddingLeft="12dp"
                             android:paddingRight="12dp"
@@ -98,7 +99,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Pași Azi"
+                            android:text="Today's steps"
                             android:textStyle="bold"/>
                         <ProgressBar
                             android:id="@+id/progressPasi"
@@ -150,7 +151,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🏆 Top 3 Canguri"
+                android:text="🏆 Top 3 users this month"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_marginTop="20dp"

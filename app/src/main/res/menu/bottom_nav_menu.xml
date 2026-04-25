@@ -3,20 +3,20 @@
     <item
         android:id="@+id/nav_progres"
         android:icon="@drawable/ic_trophy"
-        android:title="PROGRES" />
+        android:title="PROGRESS" />
 
     <item
         android:id="@+id/nav_exercitii"
         android:icon="@drawable/baseline_fitness_center_24"
-        android:title="EXERCIȚII" />
+        android:title="EXERCISES" />
 
     <item
         android:id="@+id/nav_comunitate"
         android:icon="@drawable/ic_kangaroo_icon"
-        android:title="CANGUR" />
+        android:title="KANGAROO" />
 
     <item
         android:id="@+id/nav_profil"
         android:icon="@drawable/ic_person"
-        android:title="PROFIL" />
+        android:title="PROFILE" />
 </menu>

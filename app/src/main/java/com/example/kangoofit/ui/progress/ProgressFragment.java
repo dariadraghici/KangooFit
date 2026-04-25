@@ -27,6 +27,7 @@ public class ProgressFragment extends Fragment {
     private TextView txtPasi;
     private TextView txtFlotari;
     private TextView txtGenoflexiuni;
+    private TextView txtState;
     private ImageView imgMascota; // Variabilă pentru imaginea de banner
 
     private LinearLayout containerLeaderboard;
@@ -46,6 +47,7 @@ public class ProgressFragment extends Fragment {
         txtPasi = view.findViewById(R.id.txtPasi);
         txtFlotari = view.findViewById(R.id.txtFlotari);
         txtGenoflexiuni = view.findViewById(R.id.txtGenoflexiuni);
+        txtState = view.findViewById(R.id.txtState);
         imgMascota = view.findViewById(R.id.imgMascota); // ID-ul din XML-ul tău
 
         // 2. Configurări inițiale
@@ -72,9 +74,18 @@ public class ProgressFragment extends Fragment {
 
 
                     // Actualizăm restul UI-ului
+                    int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
                     imgMascota.setImageResource(KangarooLevel.getDrawableResId(nivel));
                     txtFlotari.setText(user.flotari + " Flotări");
                     txtGenoflexiuni.setText(user.genoflexiuni + " Genoflexiuni");
+
+                    // Actualizăm starea (HAPPY, NEUTRAL, SAD)
+                    float progress = KangarooLevel.getOverallProgress(nivel, stats);
+                    String mood;
+                    if (progress < 0.3f) mood = "SAD";
+                    else if (progress < 0.7f) mood = "NEUTRAL";
+                    else mood = "HAPPY";
+                    txtState.setText("State: " + mood);
 
                     // Reîncărcăm leaderboard-ul când se schimbă datele
                     loadLeaderboard();
