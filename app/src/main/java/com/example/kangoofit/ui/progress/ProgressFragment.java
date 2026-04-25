@@ -31,6 +31,11 @@ public class ProgressFragment extends Fragment {
 
     private LinearLayout containerLeaderboard;
 
+    // 1. Adăugăm aceste variabile pentru a ține minte valorile curente
+    private int pasiActuali = 0;
+    private int targetActual = 0;
+    private boolean isShowingDetail = false; // Pentru a preveni bug-urile la click-uri repetate
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -44,29 +49,40 @@ public class ProgressFragment extends Fragment {
         imgMascota = view.findViewById(R.id.imgMascota); // ID-ul din XML-ul tău
 
         // 2. Configurări inițiale
-        int targetPasi = 10000;
-        progressBarPasi.setMax(targetPasi);
+        txtPasi.setOnClickListener(v -> showStepDetails());
 
-        // 3. Ascultăm datele din Firebase în timp real
         String uid = FirebaseAuth.getInstance().getUid();
         if (uid != null) {
             UserManager.getInstance().listenToUser(uid, user -> {
                 if (isAdded() && user != null) {
-
-                    // ACTUALIZĂM MASCOTA (Banner-ul)
                     int nivel = user.nivel_kangaroo > 0 ? user.nivel_kangaroo : 1;
+
+                    // --- LOGICA PENTRU TARGET DINAMIC ---
+                    // Luăm target-ul de pași specific nivelului curent (Type 2 = Pasi)
+                    pasiActuali = user.pasi;
+                    targetActual = KangarooLevel.getRequirement(nivel, 2);
+
+                    progressBarPasi.setMax(targetActual);
+                    progressBarPasi.setProgress(pasiActuali);
+
+                    // Dacă nu suntem în modul de detalii, afișăm doar pașii
+                    if (!isShowingDetail) {
+                        txtPasi.setText(String.valueOf(pasiActuali));
+                    }
+
+
+                    // Actualizăm restul UI-ului
                     imgMascota.setImageResource(KangarooLevel.getDrawableResId(nivel));
-
-                    // Actualizăm Pașii
-                    txtPasi.setText(String.valueOf(user.pasi));
-                    progressBarPasi.setProgress(user.pasi);
-
-                    // Actualizăm textele pentru exerciții
                     txtFlotari.setText(user.flotari + " Flotări");
                     txtGenoflexiuni.setText(user.genoflexiuni + " Genoflexiuni");
+
+                    // Reîncărcăm leaderboard-ul când se schimbă datele
+                    loadLeaderboard();
                 }
             });
         }
+
+
 
         // LEADERBORD TYPE SHI
         containerLeaderboard = view.findViewById(R.id.container_leaderboard);
@@ -79,6 +95,21 @@ public class ProgressFragment extends Fragment {
         return view;
     }
 
+
+    private void showStepDetails() {
+        if (isShowingDetail) return; // Evităm suprapunerea timer-elor
+
+        isShowingDetail = true;
+        txtPasi.setText(pasiActuali + " / " + targetActual);
+
+        // Așteptăm 2 secunde (2000 milisecunde)
+        txtPasi.postDelayed(() -> {
+            if (isAdded()) { // Verificăm dacă userul mai e pe pagină
+                txtPasi.setText(String.valueOf(pasiActuali));
+                isShowingDetail = false;
+            }
+        }, 2000);
+    }
 
     // Metoda pentru calcul și afișare
     private void loadLeaderboard() {
