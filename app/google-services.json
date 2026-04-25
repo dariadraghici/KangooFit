@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "581870396241-m11ll3j9ru8m18a0e320lf9i6nu7kqma.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kangoofit",
+            "certificate_hash": "7633fd02072ee011380daff626d55437ced14e09"
+          }
+        },
+        {
+          "client_id": "581870396241-o4vc47fu57mdg3rnnf2h7pslg56jonmq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kangoofit",
+            "certificate_hash": "b7ddd9c6a0231e986a4909ff0bf2af8170aba579"
+          }
+        },
+        {
           "client_id": "581870396241-uorq2d72v6al0acnjk67mlt8843fh80g.apps.googleusercontent.com",
           "client_type": 3
         }

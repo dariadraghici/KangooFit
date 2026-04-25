@@ -11,4 +11,8 @@
     </style>
 
     <style name="Theme.KangooFit" parent="Base.Theme.KangooFit" />
+
+    <style name="Widget.Material3.ShapeAppearance.FullyRounded" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>

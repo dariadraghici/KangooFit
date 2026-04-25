@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import com.example.kangoofit.ui.exercises.ExercisesFragment;
 import com.example.kangoofit.ui.home.HomeFragment;
 import com.example.kangoofit.ui.kangaroo.KangarooFragment;  // ← IMPORT NOU
+import com.example.kangoofit.ui.profile.ProfileFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.kangoofit.ui.progress.ProgressFragment;
 import com.example.kangoofit.R;
@@ -38,8 +39,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_comunitate) {
                 selectedFragment = new KangarooFragment();  // ← AL 4-LEA BUTON
             } else if (itemId == R.id.nav_profil) {
-                // selectedFragment = new ProfileFragment(); // Vom crea ulterior
-                selectedFragment = new HomeFragment(); // Placeholder
+                selectedFragment = new ProfileFragment();
             }
 
             if (selectedFragment != null) {

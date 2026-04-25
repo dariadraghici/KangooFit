@@ -143,6 +143,9 @@ public class CameraExerciseActivity extends AppCompatActivity {
             overlayView.setResults(result);
             List<NormalizedLandmark> landmarks = result.landmarks().get(0);
 
+            // actualizeaza campuri din db
+            String firebaseField = exerciseType.equals("PUSHUPS") ? "flotari" : "genoflexiuni";
+
             if (exerciseType.equals("PUSHUPS")) {
                 NormalizedLandmark shoulder = landmarks.get(12);
                 NormalizedLandmark elbow = landmarks.get(14);
@@ -153,6 +156,7 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 if (armAngle > 160) {
                     if (movementStage.equals("down")) {
                         repCount++;
+                        updateRepetitionInFirebase(firebaseField);
                         runOnUiThread(() -> tvCounter.setText("Flotări: " + repCount));
                         sendRepsToWatch(repCount);
                     }
@@ -170,6 +174,7 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 if (legAngle > 160) {
                     if (movementStage.equals("down")) {
                         repCount++;
+                        updateRepetitionInFirebase(firebaseField);
                         runOnUiThread(() -> tvCounter.setText("Genuflexiuni: " + repCount));
                         sendRepsToWatch(repCount);
                     }
@@ -179,6 +184,11 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void updateRepetitionInFirebase(String field) {
+        // Incrementăm cu 1 în baza de date
+        com.example.kangoofit.database.UserManager.getInstance().incrementStat(field, 1);
     }
 
     @Override
