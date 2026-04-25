@@ -74,4 +74,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     // Firestore
     implementation("com.google.firebase:firebase-firestore:24.10.3")
+
+    // img cont google
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 }
