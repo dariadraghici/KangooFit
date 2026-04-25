@@ -63,16 +63,24 @@ public class LoginActivity extends AppCompatActivity {
                         Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                         try {
                             GoogleSignInAccount account = task.getResult(ApiException.class);
+                            Log.d(TAG, "Google login success, authenticating with Firebase...");
                             firebaseAuthWithGoogle(account.getIdToken());
                         } catch (ApiException e) {
-                            Log.w(TAG, "Google sign in failed", e);
-                            Toast.makeText(this, "Logare eșuată", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Google sign in failed. Code: " + e.getStatusCode(), e);
+                            Toast.makeText(this, "Logare Google eșuată: " + e.getStatusCode(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
 
-        // 4. Setăm click pe butonul de login
+        // 4. Setăm click pe butoane
+        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
         findViewById(R.id.btn_google_login).setOnClickListener(v -> signIn());
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
     }
 
     private void signIn() {
@@ -132,10 +140,5 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        // Dacă userul e deja logat, îl trimitem direct la ecranul principal
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser != null){
-            goToMainActivity();
-        }
     }
 }
