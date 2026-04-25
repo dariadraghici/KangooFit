@@ -104,20 +104,20 @@ public class KangarooFragment extends Fragment {
         imgKangaroo.setImageResource(KangarooLevel.getDrawableResId(level));
 
         // Texte
-        tvLevelNumber.setText("LEVEL " + level);
+        tvLevelNumber.setText(getString(R.string.level_prefix_simple) + level);
         tvLevelName.setText(KangarooLevel.LEVEL_NAMES[level - 1]);
 
         if (level >= KangarooLevel.TOTAL_LEVELS) {
-            tvNextLevel.setText("Ai ajuns la forma maximă!");
+            tvNextLevel.setText(getString(R.string.max_level_reached));
         } else {
-            tvNextLevel.setText("Progres către nivelul " + (level + 1));
+            // Folosim formatarea pentru a pune numărul nivelului următor
+            tvNextLevel.setText(getString(R.string.progress_to_level, (level + 1)));
         }
 
         // Barele individuale
         updateSingleBar(progressBarSquats, tvSquatsProgress, stats[0], KangarooLevel.getRequirement(level, 0));
         updateSingleBar(progressBarPushups, tvPushupsProgress, stats[1], KangarooLevel.getRequirement(level, 1));
         updateSingleBar(progressBarSteps, tvStepsProgress, stats[2], KangarooLevel.getRequirement(level, 2));
-
         // Bara de sus (Overall)
         progressBarOverall.setProgress((int) (totalProgress * 100));
     }

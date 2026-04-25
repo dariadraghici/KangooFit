@@ -23,9 +23,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
 
+        android:background="@color/nav_background"
+
         app:itemIconTint="@color/nav_item_color"
         app:itemTextColor="@color/nav_item_color"
-        app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView.ActiveIndicator"
-        app:itemRippleColor="#4CAF50" />
+
+        app:itemActiveIndicatorStyle="@style/App.CustomIndicator"
+        app:itemRippleColor="@color/nav_active_color" />
     
 </androidx.constraintlayout.widget.ConstraintLayout>

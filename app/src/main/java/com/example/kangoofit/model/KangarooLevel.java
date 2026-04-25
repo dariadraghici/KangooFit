@@ -6,8 +6,12 @@ public class KangarooLevel {
     public static final int TOTAL_LEVELS = 6;
 
     public static final String[] LEVEL_NAMES = {
-            "Pui de Cangur", "Explorator Junior", "Cangur Sportiv",
-            "Săritor de Elită", "Maestru Kanga", "Cangur Legendar"
+            "Newborn Joey",        // Nivel 1
+            "Junior Explorer",     // Nivel 2
+            "Sporty Kangaroo",     // Nivel 3
+            "Elite Jumper",        // Nivel 4
+            "Kanga Master",        // Nivel 5
+            "Legendary Kangaroo"   // Nivel 6
     };
 
     // Index 0: Squats, 1: Pushups, 2: Steps

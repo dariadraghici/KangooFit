@@ -5,4 +5,12 @@
     <string name="level_max_reached">🏆 Full Adult — max level reached</string>
     <string name="default_web_client_id">581870396241-uorq2d72v6al0acnjk67mlt8843fh80g.apps.googleusercontent.com</string>
 
+    <string name="label_pushups">Pushups</string>
+    <string name="label_squats">Squats</string>
+    <string name="label_steps">steps</string>
+    <string name="label_anonymous">Anonymous</string>
+
+    <string name="progress_to_level">Progress to level %d</string>
+    <string name="max_level_reached">You have reached maximum form!</string>
+    <string name="level_prefix_simple">LEVEL </string>
 </resources>

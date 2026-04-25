@@ -2,4 +2,8 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="kangaroo_orange">#E68155</color>
+    <color name="app_background_cream">#FFF7E8</color>
+    <color name="nav_background">#FFE4C7</color>
+    <color name="nav_active_color">#E87A4D</color> <color name="nav_inactive_color">#757575</color>
 </resources>

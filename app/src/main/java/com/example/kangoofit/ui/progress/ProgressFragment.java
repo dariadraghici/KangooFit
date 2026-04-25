@@ -76,8 +76,8 @@ public class ProgressFragment extends Fragment {
                     // Actualizăm restul UI-ului
                     int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
                     imgMascota.setImageResource(KangarooLevel.getDrawableResId(nivel));
-                    txtFlotari.setText(user.flotari + " Flotări");
-                    txtGenoflexiuni.setText(user.genoflexiuni + " Genoflexiuni");
+                    txtFlotari.setText(user.flotari + " " + getString(R.string.label_pushups));
+                    txtGenoflexiuni.setText(user.genoflexiuni + " " + getString(R.string.label_squats));
 
                     // Actualizăm starea (HAPPY, NEUTRAL, SAD)
                     float progress = KangarooLevel.getOverallProgress(nivel, stats);
@@ -147,14 +147,13 @@ public class ProgressFragment extends Fragment {
                 String medal = (i == 0) ? "🥇 " : (i == 1) ? "🥈 " : "🥉 ";
 
                 // Verificăm dacă numele este null și punem ceva în loc (pentru debug)
-                String displayName = (user.name != null && !user.name.isEmpty()) ? user.name : "Anonim (Lipsă nume)";
-
+                String displayName = (user.name != null && !user.name.isEmpty()) ? user.name : getString(R.string.label_anonymous);
                 text1.setText(medal + displayName);
                 text1.setTypeface(null, android.graphics.Typeface.BOLD);
 
                 // Calculăm punctele
                 int puncte = (int) calculatePoints(user);
-                text2.setText("Nivel " + user.nivel_kangaroo + " • " + puncte + " puncte");
+                text2.setText("Level " + user.nivel_kangaroo + " • " + puncte + " points");
 
                 containerLeaderboard.addView(row);
             }
