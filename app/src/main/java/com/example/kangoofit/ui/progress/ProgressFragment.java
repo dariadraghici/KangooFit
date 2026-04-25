@@ -33,15 +33,6 @@ public class ProgressFragment extends Fragment {
         // Exemplu: Setăm pașii din cod (aici vei aduce datele din Firebase mai târziu)
         updateProgress(8450, 10000);
 
-        // --- COD PENTRU BUTONUL DE TEST ---
-        Button btnTest = view.findViewById(R.id.btn_test_login);
-        btnTest.setOnClickListener(v -> {
-            // Deschide pagina de login pe care am făcut-o anterior
-            Intent intent = new Intent(getActivity(), LoginActivity.class);
-            startActivity(intent);
-        });
-        // ----------------------------------
-
         return view;
     }
 
