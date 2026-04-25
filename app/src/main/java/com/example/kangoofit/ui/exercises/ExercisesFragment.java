@@ -20,6 +20,7 @@ public class ExercisesFragment extends Fragment {
 
     private TextView tvKangarooStateDesc;
     private ImageView imgKangarooState;
+    private int userLevel = 1; // Nivelul default
 
     @Nullable
     @Override
@@ -38,11 +39,11 @@ public class ExercisesFragment extends Fragment {
         if (uid != null) {
             UserManager.getInstance().listenToUser(uid, user -> {
                 if (isAdded() && user != null) {
-                    int currentLevel = user.nivel_kangaroo > 0 ? user.nivel_kangaroo : 1;
+                    userLevel = user.nivel_kangaroo > 0 ? user.nivel_kangaroo : 1;
                     int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
 
-                    float overallProgress = KangarooLevel.getOverallProgress(currentLevel, stats);
-                    updateKangarooStateUI(overallProgress);
+                    float overallProgress = KangarooLevel.getOverallProgress(userLevel, stats);
+                    updateKangarooStateUI(overallProgress, userLevel);
                 }
             });
         }
@@ -80,25 +81,34 @@ public class ExercisesFragment extends Fragment {
         return view;
     }
 
-    private void updateKangarooStateUI(float progress) {
+    private void updateKangarooStateUI(float progress, int level) {
         if (!isAdded()) return;
 
-        String status;
-        int imageResId;
+        String mood;
+        String description;
 
         if (progress < 0.3f) {
-            status = "SAD";
-            imageResId = R.drawable.kangaroo_sad;
+            mood = "sad";
+            description = "Your kangaroo is SAD.\nTime to change that!";
         } else if (progress < 0.7f) {
-            status = "NEUTRAL";
-            imageResId = R.drawable.kangaroo_neutral;
+            mood = "neutral";
+            description = "Your kangaroo is NEUTRAL.\nTime to change that!";
         } else {
-            tvKangarooStateDesc.setText("Your kangaroo is HAPPY!\nKeep it up!");
-            imgKangarooState.setImageResource(R.drawable.kangaroo_happy);
-            return;
+            mood = "happy";
+            description = "Your kangaroo is HAPPY!\nKeep it up!";
         }
 
-        tvKangarooStateDesc.setText("Your kangaroo is " + status + ".\nTime to change that!");
-        imgKangarooState.setImageResource(imageResId);
+        tvKangarooStateDesc.setText(description);
+
+        // Construim numele resursei dinamic: kangaroo_mood_level (ex: kangaroo_happy_1)
+        String imageName = "kangaroo_" + mood + "_" + level;
+        int resId = getResources().getIdentifier(imageName, "drawable", requireContext().getPackageName());
+
+        if (resId != 0) {
+            imgKangarooState.setImageResource(resId);
+        } else {
+            // Fallback în cazul în care imaginea specifică lipsește
+            imgKangarooState.setImageResource(R.drawable.kangaroo_neutral);
+        }
     }
 }

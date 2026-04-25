@@ -38,7 +38,7 @@
                 android:layout_gravity="bottom|center_horizontal"
                 android:layout_marginBottom="20dp"
                 android:paddingHorizontal="16dp"
-                android:text="Your kangaroo is NEUTRAL.\nTime to change that!"
+                android:text="Your kangaroo status\nloading..."
                 android:textColor="#FFFFFF"
                 android:textSize="22sp"
                 android:textStyle="bold"
