@@ -64,18 +64,6 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Kangaroo tău\ne FERICIT! 🥳"
-                            android:textColor="#FFFFFF"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:shadowColor="#000000"
-                            android:shadowDx="2"
-                            android:shadowDy="2"
-                            android:shadowRadius="4"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
                             android:text="Stare: HAPPY"
                             android:layout_marginTop="8dp"
                             android:paddingLeft="12dp"
