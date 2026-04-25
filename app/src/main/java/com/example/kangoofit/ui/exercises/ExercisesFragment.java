@@ -22,32 +22,53 @@ public class ExercisesFragment extends Fragment {
     private ImageView imgKangarooState;
     private int userLevel = 1; // Nivelul default
 
+    // Variabilele noi pentru numărul de repetări
+    private TextView tvTotalFlotari, tvTotalGenuflexiuni, tvTotalJacks, tvTotalBiceps, tvTotalUmeri;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_exercises, container, false);
 
+        // Găsim cardurile
         CardView itemFlotari = view.findViewById(R.id.item_flotari);
         CardView itemGenuflexiuni = view.findViewById(R.id.item_genuflexiuni);
         CardView itemJumpingJacks = view.findViewById(R.id.item_jumping_jacks);
         CardView itemBiceps = view.findViewById(R.id.item_biceps);
         CardView itemShoulder = view.findViewById(R.id.item_shoulder);
+
         tvKangarooStateDesc = view.findViewById(R.id.tv_kangaroo_state_desc);
         imgKangarooState = view.findViewById(R.id.img_kangaroo_state);
+
+        // Găsim TextView-urile pentru totaluri
+        tvTotalFlotari = view.findViewById(R.id.tv_total_flotari);
+        tvTotalGenuflexiuni = view.findViewById(R.id.tv_total_genuflexiuni);
+        tvTotalJacks = view.findViewById(R.id.tv_total_jacks);
+        tvTotalBiceps = view.findViewById(R.id.tv_total_biceps);
+        tvTotalUmeri = view.findViewById(R.id.tv_total_umeri);
 
         String uid = FirebaseAuth.getInstance().getUid();
         if (uid != null) {
             UserManager.getInstance().listenToUser(uid, user -> {
                 if (isAdded() && user != null) {
+                    // 1. Actualizăm starea și progresul Cangurului
                     userLevel = user.nivel_kangaroo > 0 ? user.nivel_kangaroo : 1;
                     int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
 
                     float overallProgress = KangarooLevel.getOverallProgress(userLevel, stats);
                     updateKangarooStateUI(overallProgress, userLevel);
+
+                    // 2. Actualizăm textele cu numărul total de repetări pe fiecare card
+                    tvTotalFlotari.setText(String.valueOf(user.flotari));
+                    tvTotalGenuflexiuni.setText(String.valueOf(user.genoflexiuni));
+                    tvTotalJacks.setText(String.valueOf(user.jumping_jacks));
+                    tvTotalBiceps.setText(String.valueOf(user.biceps));
+                    tvTotalUmeri.setText(String.valueOf(user.umeri));
                 }
             });
         }
 
+        // Setăm click-urile
         itemFlotari.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
             intent.putExtra("EXERCISE_TYPE", "PUSHUPS");

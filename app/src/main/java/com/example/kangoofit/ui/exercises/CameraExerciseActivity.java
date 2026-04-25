@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import androidx.core.content.ContextCompat;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,8 +21,7 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import com.example.kangoofit.utils.OverlayView; // Importă OverlayView
+import com.example.kangoofit.utils.OverlayView;
 import com.example.kangoofit.R;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mediapipe.framework.image.BitmapImageBuilder;
@@ -34,16 +34,18 @@ import com.google.mediapipe.tasks.components.containers.NormalizedLandmark;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import android.graphics.Matrix;
 
 public class CameraExerciseActivity extends AppCompatActivity {
 
     private PreviewView previewView;
     private TextView tvCounter;
+    private TextView tvWarning; // NOU
     private PoseLandmarker poseLandmarker;
     private ExecutorService cameraExecutor;
     private OverlayView overlayView;
 
-    private String exerciseType = ""; // PUSHUPS sau SQUATS
+    private String exerciseType = "";
     private int repCount = 0;
     private String movementStage = "up";
 
@@ -61,16 +63,26 @@ public class CameraExerciseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_exercise);
 
-        // Preluăm tipul de exercițiu trimis din ExercisesFragment
         if (getIntent() != null && getIntent().hasExtra("EXERCISE_TYPE")) {
             exerciseType = getIntent().getStringExtra("EXERCISE_TYPE");
         }
 
         previewView = findViewById(R.id.previewView);
         tvCounter = findViewById(R.id.tvCounter);
+        tvWarning = findViewById(R.id.tvWarning);
         overlayView = findViewById(R.id.overlayView);
 
-        tvCounter.setText(exerciseType.equals("PUSHUPS") ? "Flotări: 0" : "Genuflexiuni: 0");
+        // 1. REPARAT: Setăm textul corect de la început
+        String initialText = "";
+        switch (exerciseType) {
+            case "PUSHUPS": initialText = "Flotări: 0"; break;
+            case "SQUATS": initialText = "Genuflexiuni: 0"; break;
+            case "JUMPING_JACKS": initialText = "Jumping Jacks: 0"; break;
+            case "BICEP_CURLS": initialText = "Bicep Curls: 0"; break;
+            case "SHOULDER_PRESS": initialText = "Shoulder Press: 0"; break;
+            default: initialText = "Exercițiu: 0"; break;
+        }
+        tvCounter.setText(initialText);
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
@@ -104,7 +116,6 @@ public class CameraExerciseActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Înregistrăm receiver-ul în siguranță
         ContextCompat.registerReceiver(this, stopReceiver,
                 new IntentFilter("STOP_EXERCISE_ACTION"), ContextCompat.RECEIVER_NOT_EXPORTED);
     }
@@ -135,11 +146,29 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 imageAnalysis.setAnalyzer(cameraExecutor, imageProxy -> {
                     try {
                         Bitmap bitmap = imageProxy.toBitmap();
-                        if (bitmap != null) {
-                            MPImage mpImage = new BitmapImageBuilder(bitmap).build();
-                            long timestampMs = imageProxy.getImageInfo().getTimestamp() / 1000000;
-                            poseLandmarker.detectAsync(mpImage, timestampMs);
+                        int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+
+                        Matrix matrix = new Matrix();
+
+                        // 1. ROTIRE: Dacă imaginea e landscape dar ecranul e portrait, o rotim să o facem dreaptă
+                        if (bitmap.getWidth() > bitmap.getHeight() && rotationDegrees != 0) {
+                            matrix.postRotate(rotationDegrees);
                         }
+                        Bitmap uprightBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+
+                        // 2. OGLINDIRE: Pentru camera frontală, imaginea trebuie să fie exact ca în oglindă
+                        Matrix flipMatrix = new Matrix();
+                        flipMatrix.postScale(-1f, 1f, uprightBitmap.getWidth() / 2f, uprightBitmap.getHeight() / 2f);
+                        Bitmap finalBitmap = Bitmap.createBitmap(uprightBitmap, 0, 0, uprightBitmap.getWidth(), uprightBitmap.getHeight(), flipMatrix, true);
+
+                        // 3. Spunem Overlay-ului proporțiile exacte pe thread-ul de UI
+                        runOnUiThread(() -> overlayView.setImageDimensions(finalBitmap.getWidth(), finalBitmap.getHeight()));
+
+                        // 4. Analizăm imaginea finală și corectă!
+                        MPImage mpImage = new BitmapImageBuilder(finalBitmap).build();
+                        long timestampMs = imageProxy.getImageInfo().getTimestamp() / 1000000;
+                        poseLandmarker.detectAsync(mpImage, timestampMs);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
@@ -166,11 +195,53 @@ public class CameraExerciseActivity extends AppCompatActivity {
         return angle;
     }
 
+    // NOU: Funcție care verifică dacă o articulație e în cadru (0.0 -> 1.0) și AI-ul e sigur de ea
+    private boolean isLandmarkValid(NormalizedLandmark lm) {
+        if (lm.x() < 0.0f || lm.x() > 1.0f || lm.y() < 0.0f || lm.y() > 1.0f) {
+            return false;
+        }
+        // Dacă vizibilitatea e prea mică, înseamnă că AI-ul ghicește (ex: e acoperită de corp)
+        if (lm.visibility().isPresent() && lm.visibility().get() < 0.5f) {
+            return false;
+        }
+        return true;
+    }
+
     private void onPoseDetected(PoseLandmarkerResult result, MPImage mpImage) {
         if (!result.landmarks().isEmpty()) {
             overlayView.setResults(result);
             List<NormalizedLandmark> landmarks = result.landmarks().get(0);
 
+            // 2. REPARAT: Verificăm dacă suntem corect așezați în cadru înainte de a calcula
+            boolean isReady = false;
+
+            switch (exerciseType) {
+                case "PUSHUPS":
+                case "BICEP_CURLS":
+                case "SHOULDER_PRESS":
+                    // Pentru exerciții de brațe, vrem să vedem clar umărul, cotul și încheietura (verificăm pe partea dreaptă de ex.)
+                    isReady = isLandmarkValid(landmarks.get(12)) && isLandmarkValid(landmarks.get(14)) && isLandmarkValid(landmarks.get(16));
+                    break;
+                case "SQUATS":
+                    // Pentru picioare, vrem șoldul, genunchiul și glezna
+                    isReady = isLandmarkValid(landmarks.get(24)) && isLandmarkValid(landmarks.get(26)) && isLandmarkValid(landmarks.get(28));
+                    break;
+                case "JUMPING_JACKS":
+                    // Vrem ambele încheieturi și ambele glezne
+                    isReady = isLandmarkValid(landmarks.get(15)) && isLandmarkValid(landmarks.get(16)) &&
+                            isLandmarkValid(landmarks.get(27)) && isLandmarkValid(landmarks.get(28));
+                    break;
+            }
+
+            // Gestionăm UI-ul de avertizare și oprim execuția dacă nu e pregătit
+            if (!isReady) {
+                runOnUiThread(() -> tvWarning.setVisibility(View.VISIBLE));
+                return; // OPRIM TOT aici. AI-ul refuză să numere ceva!
+            } else {
+                runOnUiThread(() -> tvWarning.setVisibility(View.GONE));
+            }
+
+            // De aici în jos, codul se execută DOAR dacă utilizatorul e vizibil perfect
             if (exerciseType.equals("PUSHUPS")) {
                 NormalizedLandmark shoulder = landmarks.get(12);
                 NormalizedLandmark elbow = landmarks.get(14);
@@ -205,7 +276,6 @@ public class CameraExerciseActivity extends AppCompatActivity {
                     movementStage = "down";
                 }
             }
-            // --- NOILE EXERCIȚII ---
             else if (exerciseType.equals("JUMPING_JACKS")) {
                 NormalizedLandmark leftWrist = landmarks.get(15);
                 NormalizedLandmark rightWrist = landmarks.get(16);
@@ -214,9 +284,7 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 NormalizedLandmark leftAnkle = landmarks.get(27);
                 NormalizedLandmark rightAnkle = landmarks.get(28);
 
-                // Axele Y în Android cresc de sus în jos (capul e Y mic, picioarele sunt Y mare)
                 boolean armsUp = leftWrist.y() < leftShoulder.y() && rightWrist.y() < rightShoulder.y();
-                // Verificăm dacă distanța dintre glezne e mai mare decât distanța dintre umeri * 1.5
                 boolean legsApart = Math.abs(leftAnkle.x() - rightAnkle.x()) > Math.abs(leftShoulder.x() - rightShoulder.x()) * 1.5;
 
                 if (armsUp && legsApart) {
@@ -231,20 +299,19 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 }
             }
             else if (exerciseType.equals("BICEP_CURLS")) {
-                // Monitorizăm brațul drept pentru simplitate
                 NormalizedLandmark shoulder = landmarks.get(12);
                 NormalizedLandmark elbow = landmarks.get(14);
                 NormalizedLandmark wrist = landmarks.get(16);
                 double angle = calculateAngle(shoulder, elbow, wrist);
 
-                if (angle < 45) { // Greutatea e la piept (unghi ascuțit)
+                if (angle < 45) {
                     if (movementStage.equals("down")) {
                         repCount++;
                         runOnUiThread(() -> tvCounter.setText("Bicep Curls: " + repCount));
                         sendRepsToWatch(repCount);
                     }
                     movementStage = "up";
-                } else if (angle > 150) { // Brațul e întins jos
+                } else if (angle > 150) {
                     movementStage = "down";
                 }
             }
@@ -254,7 +321,6 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 NormalizedLandmark wrist = landmarks.get(16);
                 double angle = calculateAngle(shoulder, elbow, wrist);
 
-                // Brațul este întins deasupra capului
                 if (angle > 150 && wrist.y() < shoulder.y()) {
                     if (movementStage.equals("down")) {
                         repCount++;
@@ -263,11 +329,13 @@ public class CameraExerciseActivity extends AppCompatActivity {
                     }
                     movementStage = "up";
                 }
-                // Brațul este coborât, cotul îndoit ~90 grade
                 else if (angle < 100 && wrist.y() >= shoulder.y() - 0.2) {
                     movementStage = "down";
                 }
             }
+        } else {
+            // Dacă nu detectează niciun corp deloc
+            runOnUiThread(() -> tvWarning.setVisibility(View.VISIBLE));
         }
     }
 
@@ -289,11 +357,6 @@ public class CameraExerciseActivity extends AppCompatActivity {
         finish();
     }
 
-    private void updateRepetitionInFirebase(String field) {
-        // Incrementăm cu 1 în baza de date
-        com.example.kangoofit.database.UserManager.getInstance().incrementStat(field, 1);
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -301,8 +364,6 @@ public class CameraExerciseActivity extends AppCompatActivity {
         if (poseLandmarker != null) {
             poseLandmarker.close();
         }
-        // Aici (pe viitor) vei putea salva "repCount" în baza de date/ViewModel
-        // pentru a hrăni cangurul și a actualiza clasamentul!
     }
 
     private void sendRepsToWatch(int reps) {
