@@ -25,11 +25,9 @@ public class KangarooFragment extends Fragment {
     private TextView tvLevelNumber;
     private ProgressBar progressBarSquats;
     private ProgressBar progressBarPushups;
-    private ProgressBar progressBarPullups;
     private ProgressBar progressBarSteps;
     private TextView tvSquatsProgress;
     private TextView tvPushupsProgress;
-    private TextView tvPullupsProgress;
     private TextView tvStepsProgress;
     private TextView tvNextLevel;
     private ProgressBar progressBarOverall;
@@ -55,11 +53,9 @@ public class KangarooFragment extends Fragment {
         tvLevelNumber     = view.findViewById(R.id.tv_level_number);
         progressBarSquats = view.findViewById(R.id.progress_squats);
         progressBarPushups= view.findViewById(R.id.progress_pushups);
-        progressBarPullups= view.findViewById(R.id.progress_pullups);
         progressBarSteps  = view.findViewById(R.id.progress_steps);
         tvSquatsProgress  = view.findViewById(R.id.tv_squats_progress);
         tvPushupsProgress = view.findViewById(R.id.tv_pushups_progress);
-        tvPullupsProgress = view.findViewById(R.id.tv_pullups_progress);
         tvStepsProgress   = view.findViewById(R.id.tv_steps_progress);
         tvNextLevel       = view.findViewById(R.id.tv_next_level);
         progressBarOverall= view.findViewById(R.id.progress_overall);
@@ -94,6 +90,51 @@ public class KangarooFragment extends Fragment {
             if (level == null) level = 1;
             updateProgressBars(level, progress);
         });
+
+        com.example.kangoofit.database.UserManager userManager = com.example.kangoofit.database.UserManager.getInstance();
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getUid();
+
+        if (uid != null) {
+            // 2. Ascultăm datele reale din Firestore
+            userManager.listenToUser(uid, user -> {
+                if (isAdded() && user != null) {
+
+                    // Actualizăm nivelul din baza de date
+                    int level = user.nivel_kangaroo;
+
+                    // Pregătim array-ul de progres din câmpurile utilizatorului
+                    // Ordinea: 0=Squats, 1=Pushups, 2=Pullups, 3=Steps
+                    int[] statsFromFirebase = new int[] {
+                            user.genoflexiuni, // Din database
+                            user.flotari,      // Din database
+                            0,                 // Adaugă user.tratiuni în clasa User dacă ai acest câmp
+                            user.pasi          // Din database
+                    };
+
+                    // Actualizăm UI-ul cu datele noi
+                    actualizeazaUI(level, statsFromFirebase);
+                }
+            });
+        }
+
+    }
+
+    private void actualizeazaUI(int level, int[] progress) {
+        // 1. Imaginea și Numele Nivelului
+        imgKangaroo.setImageResource(KangarooLevel.getDrawableResId(level));
+        String levelName = KangarooLevel.LEVEL_NAMES[level - 1];
+        tvLevelName.setText(levelName);
+        tvLevelNumber.setText(getString(R.string.level_label, level));
+
+        // 2. Textul pentru nivelul următor
+        if (level >= KangarooLevel.TOTAL_LEVELS) {
+            tvNextLevel.setText(R.string.level_max_reached);
+        } else {
+            tvNextLevel.setText(getString(R.string.next_level_label, KangarooLevel.LEVEL_NAMES[level]));
+        }
+
+        // 3. Bara de progres și numerele (Metoda ta existentă)
+        updateProgressBars(level, progress);
     }
 
     private void updateProgressBars(int level, int[] progress) {
@@ -103,11 +144,9 @@ public class KangarooFragment extends Fragment {
             // Toate barele la 100%
             progressBarSquats.setProgress(100);
             progressBarPushups.setProgress(100);
-            progressBarPullups.setProgress(100);
             progressBarSteps.setProgress(100);
             tvSquatsProgress.setText("✓");
             tvPushupsProgress.setText("✓");
-            tvPullupsProgress.setText("✓");
             tvStepsProgress.setText("✓");
             progressBarOverall.setProgress(100);
             return;
@@ -115,24 +154,20 @@ public class KangarooFragment extends Fragment {
 
         int reqSq = KangarooLevel.getRequirement(level, 0);
         int reqPu = KangarooLevel.getRequirement(level, 1);
-        int reqPl = KangarooLevel.getRequirement(level, 2);
-        int reqSt = KangarooLevel.getRequirement(level, 3);
+        int reqSt = KangarooLevel.getRequirement(level, 2);
 
         int doneSq = progress[0];
         int donePu = progress[1];
-        int donePl = progress[2];
-        int doneSt = progress[3];
+        int doneSt = progress[2];
 
         // Setează progresul barelor (0–100)
         progressBarSquats.setProgress(reqSq > 0 ? Math.min(100, doneSq * 100 / reqSq) : 100);
         progressBarPushups.setProgress(reqPu > 0 ? Math.min(100, donePu * 100 / reqPu) : 100);
-        progressBarPullups.setProgress(reqPl > 0 ? Math.min(100, donePl * 100 / reqPl) : 100);
         progressBarSteps.setProgress(reqSt > 0 ? Math.min(100, doneSt * 100 / reqSt) : 100);
 
         // Textele „X / Y"
         tvSquatsProgress.setText(reqSq > 0 ? doneSq + " / " + reqSq : "—");
         tvPushupsProgress.setText(reqPu > 0 ? donePu + " / " + reqPu : "—");
-        tvPullupsProgress.setText(reqPl > 0 ? donePl + " / " + reqPl : "—");
         tvStepsProgress.setText(reqSt > 0 ? doneSt + " / " + reqSt : "—");
 
         // Bara generală de progres

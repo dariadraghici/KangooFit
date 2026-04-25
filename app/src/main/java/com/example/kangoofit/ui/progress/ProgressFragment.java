@@ -55,8 +55,8 @@ public class ProgressFragment extends Fragment {
                     progressBarPasi.setProgress(user.pasi);
 
                     // update flotari si genoflexiuni
-                    txtFlotari.setText(user.flotari + " Flotări");
-                    txtGenoflexiuni.setText(user.genoflexiuni + " Genoflexiuni");
+                    txtFlotari.setText(String.valueOf(user.flotari) + " Flotări");
+                    txtGenoflexiuni.setText(String.valueOf(user.genoflexiuni) + " Genoflexiuni");
                 }
             });
         }
