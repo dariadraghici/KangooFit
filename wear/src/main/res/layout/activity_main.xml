@@ -22,20 +22,35 @@
             android:textStyle="bold"
             android:layout_marginBottom="16dp"/>
 
-        <Button
-            android:id="@+id/btn_start_pushups"
+        <LinearLayout
+            android:id="@+id/layout_start_buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Start Flotări"
-            android:backgroundTint="#00A859"
-            android:layout_marginBottom="8dp"/>
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btn_start_pushups"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Flotări"
+                android:backgroundTint="#00A859"
+                android:layout_marginBottom="8dp"/>
+
+            <Button
+                android:id="@+id/btn_start_squats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00A859"
+                android:text="Start Genuflexiuni" />
+        </LinearLayout>
 
         <Button
-            android:id="@+id/btn_start_squats"
+            android:id="@+id/btn_stop_exercise"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="#00A859"
-            android:text="Start Genuflexiuni" />
+            android:text="Stop Antrenament"
+            android:backgroundTint="#D32F2F"
+            android:visibility="gone" />
 
     </LinearLayout>
 </androidx.wear.widget.BoxInsetLayout>

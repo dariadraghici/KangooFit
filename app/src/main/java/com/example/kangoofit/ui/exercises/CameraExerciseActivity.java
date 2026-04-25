@@ -3,6 +3,11 @@ package com.example.kangoofit.ui.exercises;
 import androidx.camera.core.AspectRatio;
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import androidx.core.content.ContextCompat;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -41,6 +46,15 @@ public class CameraExerciseActivity extends AppCompatActivity {
     private String exerciseType = ""; // PUSHUPS sau SQUATS
     private int repCount = 0;
     private String movementStage = "up";
+
+    private BroadcastReceiver stopReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("STOP_EXERCISE_ACTION".equals(intent.getAction())) {
+                finishWorkoutAndSave();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +99,20 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 .setResultListener(this::onPoseDetected)
                 .build();
         poseLandmarker = PoseLandmarker.createFromOptions(this, options);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Înregistrăm receiver-ul în siguranță
+        ContextCompat.registerReceiver(this, stopReceiver,
+                new IntentFilter("STOP_EXERCISE_ACTION"), ContextCompat.RECEIVER_NOT_EXPORTED);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(stopReceiver);
     }
 
     private void startCamera() {
@@ -156,7 +184,6 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 if (armAngle > 160) {
                     if (movementStage.equals("down")) {
                         repCount++;
-                        updateRepetitionInFirebase(firebaseField);
                         runOnUiThread(() -> tvCounter.setText("Flotări: " + repCount));
                         sendRepsToWatch(repCount);
                     }
@@ -174,7 +201,6 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 if (legAngle > 160) {
                     if (movementStage.equals("down")) {
                         repCount++;
-                        updateRepetitionInFirebase(firebaseField);
                         runOnUiThread(() -> tvCounter.setText("Genuflexiuni: " + repCount));
                         sendRepsToWatch(repCount);
                     }
@@ -184,6 +210,17 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void finishWorkoutAndSave() {
+        // Salvăm TOATE repetările deodată în Firebase
+        if (repCount > 0) {
+            String firebaseField = exerciseType.equals("PUSHUPS") ? "flotari" : "genoflexiuni";
+            com.example.kangoofit.database.UserManager.getInstance().incrementStat(firebaseField, repCount);
+        }
+
+        // Închidem camera și activitatea pe telefon
+        finish();
     }
 
     private void updateRepetitionInFirebase(String field) {

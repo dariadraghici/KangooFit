@@ -21,6 +21,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/step_update" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/stop_exercise" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/start_exercise" />
             </intent-filter>
         </service>
