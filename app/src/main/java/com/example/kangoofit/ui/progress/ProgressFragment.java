@@ -24,6 +24,8 @@ public class ProgressFragment extends Fragment {
 
         // Inițializăm elementele din UI
         progressBarPasi = view.findViewById(R.id.progressPasi);
+        txtPasi = view.findViewById(R.id.txtPasi);
+
         // Exemplu: Setăm pașii din cod (aici vei aduce datele din Firebase mai târziu)
         updateProgress(8450, 10000);
 
@@ -35,6 +37,9 @@ public class ProgressFragment extends Fragment {
         if (progressBarPasi != null) {
             progressBarPasi.setMax(targetPasi);
             progressBarPasi.setProgress(pasiActuali);
+        }
+        if (txtPasi != null) {
+            txtPasi.setText(String.valueOf(pasiActuali));
         }
     }
 }
