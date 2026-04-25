@@ -1,14 +1,12 @@
 plugins {
+    id("com.google.gms.google-services")
     alias(libs.plugins.android.application)
 }
 
 android {
     namespace = "com.example.kangoofit"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    // Sintaxa corectă pentru compileSdk:
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.kangoofit"
@@ -36,41 +34,43 @@ android {
 }
 
 dependencies {
-    implementation(libs.activity.ktx)
+    // Folosim librăriile din catalog (libs) unde există, altfel folosim string-urile
     implementation(libs.appcompat)
-    implementation(libs.constraintlayout)
     implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.espresso.core)
-    androidTestImplementation(libs.ext.junit)
+    implementation(libs.constraintlayout)
+    implementation(libs.activity.ktx)
 
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-
-    // Lifecycle components (MVVM)
-    implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
-
-    // Room Database (Backend local)
-    implementation("androidx.room:room-runtime:2.6.1")
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
-
-    // Firebase (BOM) - Backend Cloud
-    implementation(platform("com.google.firebase:firebase-bom:32.7.1"))
+    // Firebase (Am păstrat doar un singur BOM, cel mai nou - 34.12.0)
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
 
+    // Google Sign-In (Ai nevoie de asta pentru conectarea cu Google!)
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
+
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+
     // Wear OS Data Layer
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
 
+    // CameraX și MediaPipe
     val camerax_version = "1.3.0"
     implementation("androidx.camera:camera-core:${camerax_version}")
     implementation("androidx.camera:camera-camera2:${camerax_version}")
     implementation("androidx.camera:camera-lifecycle:${camerax_version}")
     implementation("androidx.camera:camera-view:${camerax_version}")
-
-    // MediaPipe pentru Pose Landmark
     implementation("com.google.mediapipe:tasks-vision:0.10.9")
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.ext.junit)
+
+    // Firebase Auth & Google Sign-In
+    implementation("com.google.firebase:firebase-auth:22.3.1")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    // Firestore
+    implementation("com.google.firebase:firebase-firestore:24.10.3")
 }

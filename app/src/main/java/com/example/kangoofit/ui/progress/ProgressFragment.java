@@ -1,15 +1,19 @@
 package com.example.kangoofit.ui.progress; // Asigură-te că e pachetul tău
 
+import android.content.Intent; // Import nou pentru navigare
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button; // Import pentru buton
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
 import com.example.kangoofit.R;
+import com.example.kangoofit.database.LoginActivity;
 
 public class ProgressFragment extends Fragment {
 
@@ -26,6 +30,15 @@ public class ProgressFragment extends Fragment {
         progressBarPasi = view.findViewById(R.id.progressPasi);
         // Exemplu: Setăm pașii din cod (aici vei aduce datele din Firebase mai târziu)
         updateProgress(8450, 10000);
+
+        // --- COD PENTRU BUTONUL DE TEST ---
+        Button btnTest = view.findViewById(R.id.btn_test_login);
+        btnTest.setOnClickListener(v -> {
+            // Deschide pagina de login pe care am făcut-o anterior
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
+            startActivity(intent);
+        });
+        // ----------------------------------
 
         return view;
     }

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "581870396241",
+    "project_id": "kangoofit-a0845",
+    "storage_bucket": "kangoofit-a0845.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581870396241:android:9c84c65c8d83a6fa196970",
+        "android_client_info": {
+          "package_name": "com.example.kangoofit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "581870396241-gltrjjn9u0f3ikl4ob43jqebfqq1eh83.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kangoofit",
+            "certificate_hash": "818dc1ffd1ccda51a986621ec09e87a84077e1e3"
+          }
+        },
+        {
+          "client_id": "581870396241-uorq2d72v6al0acnjk67mlt8843fh80g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsnelP1t_fccZnCliPedB-n6foolqQHGk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "581870396241-uorq2d72v6al0acnjk67mlt8843fh80g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

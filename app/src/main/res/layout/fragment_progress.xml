@@ -157,6 +157,15 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <Button
+                android:id="@+id/btn_test_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="TEST LOGIN PAGE"
+                android:backgroundTint="#FF5722"
+                android:textColor="#FFFFFF" />
+
         </LinearLayout>
     </ScrollView>
 

@@ -3,5 +3,6 @@
     <string name="level_label">LEVEL %d</string>
     <string name="next_level_label">Next: %s</string>
     <string name="level_max_reached">🏆 Full Adult — max level reached</string>
+    <string name="default_web_client_id">581870396241-gltrjjn9u0f3ikl4ob43jqebfqq1eh83.apps.googleusercontent.com</string>
 
 </resources>
