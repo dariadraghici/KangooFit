@@ -3,6 +3,8 @@ package com.example.kangoofit;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+
+import com.example.kangoofit.ui.exercises.ExercisesFragment;
 import com.example.kangoofit.ui.home.HomeFragment;
 import com.example.kangoofit.ui.kangaroo.KangarooFragment;  // ← IMPORT NOU
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -34,9 +36,8 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_progres) {
                  selectedFragment = new ProgressFragment(); // Vom crea ulterior
 //                selectedFragment = new HomeFragment(); // Placeholder
-            } else if (itemId == R.id.nav_top) {
-                // selectedFragment = new LeaderboardFragment(); // Vom crea ulterior
-                selectedFragment = new HomeFragment(); // Placeholder
+            } else if (itemId == R.id.nav_exercitii) {
+                selectedFragment = new ExercisesFragment();
             } else if (itemId == R.id.nav_comunitate) {
                 selectedFragment = new KangarooFragment();  // ← AL 4-LEA BUTON
             } else if (itemId == R.id.nav_profil) {
