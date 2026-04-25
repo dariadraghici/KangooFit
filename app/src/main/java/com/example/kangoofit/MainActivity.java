@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.nav_cangur) {
                 selectedFragment = new HomeFragment();
             } else if (itemId == R.id.nav_progres) {
-                // selectedFragment = new ProgressFragment();
-                selectedFragment = new HomeFragment();
+                 selectedFragment = new ProgressFragment();
+//                selectedFragment = new HomeFragment();
             } else if (itemId == R.id.nav_exercitii) { // <--- AICI AM MODIFICAT
                 selectedFragment = new ExercisesFragment(); // Deschidem Fragmentul de Exerciții
             } else if (itemId == R.id.nav_comunitate) {
