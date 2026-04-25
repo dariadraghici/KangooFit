@@ -1,12 +1,19 @@
 package com.example.kangoofit.model;
+import com.google.firebase.firestore.IgnoreExtraProperties;
+import com.google.firebase.firestore.PropertyName;
 
+@IgnoreExtraProperties // Ignoră câmpurile din DB care nu sunt în Java (previne crash-uri)
 public class User {
-    public String name, email, address;
+
+    @PropertyName("nume") // Forțează Firebase să pună valoarea din cheia "nume" aici
+    public String name;
+
+    public String email, address, stare_kangaroo;
     public long createdAt;
     public int flotari, genoflexiuni, pasi, nivel_kangaroo;
-    public String stare_kangaroo;
 
-    public User() {} // Necesar pentru Firebase
+    // CONSTRUCTORUL GOL ESTE OBLIGATORIU pentru Firebase
+    public User() {}
 
     public User(String name, String email) {
         this.name = name;

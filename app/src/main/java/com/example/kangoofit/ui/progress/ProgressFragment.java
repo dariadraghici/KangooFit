@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView; // Import necesar
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ import com.example.kangoofit.R;
 import com.example.kangoofit.database.LoginActivity;
 import com.example.kangoofit.database.UserManager;
 import com.example.kangoofit.model.KangarooLevel; // Importă modelul de nivele
+import com.example.kangoofit.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class ProgressFragment extends Fragment {
@@ -26,6 +28,8 @@ public class ProgressFragment extends Fragment {
     private TextView txtFlotari;
     private TextView txtGenoflexiuni;
     private ImageView imgMascota; // Variabilă pentru imaginea de banner
+
+    private LinearLayout containerLeaderboard;
 
     @Nullable
     @Override
@@ -64,15 +68,61 @@ public class ProgressFragment extends Fragment {
             });
         }
 
-        // --- BUTON TEST ---
-        Button btnTest = view.findViewById(R.id.btn_test_login);
-        if (btnTest != null) {
-            btnTest.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), LoginActivity.class);
-                startActivity(intent);
-            });
-        }
+        // LEADERBORD TYPE SHI
+        containerLeaderboard = view.findViewById(R.id.container_leaderboard);
+
+        // Invocă funcția de leaderboard
+        loadLeaderboard();
+
+
 
         return view;
+    }
+
+
+    // Metoda pentru calcul și afișare
+    private void loadLeaderboard() {
+        UserManager.getInstance().getTopUsers(users -> {
+            if (!isAdded()) return;
+
+            // 1. Calculăm punctele pentru fiecare user și sortăm
+            users.sort((u1, u2) -> {
+                float pts1 = calculatePoints(u1);
+                float pts2 = calculatePoints(u2);
+                return Float.compare(pts2, pts1); // Sortare descrescătoare
+            });
+
+            // 2. Curățăm containerul și afișăm primii 3
+            containerLeaderboard.removeAllViews();
+            int topCount = Math.min(users.size(), 3);
+
+            for (int i = 0; i < topCount; i++) {
+                User user = users.get(i);
+                View row = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, null);
+                TextView text1 = row.findViewById(android.R.id.text1);
+                TextView text2 = row.findViewById(android.R.id.text2);
+
+                String medal = (i == 0) ? "🥇 " : (i == 1) ? "🥈 " : "🥉 ";
+
+                // Verificăm dacă numele este null și punem ceva în loc (pentru debug)
+                String displayName = (user.name != null && !user.name.isEmpty()) ? user.name : "Anonim (Lipsă nume)";
+
+                text1.setText(medal + displayName);
+                text1.setTypeface(null, android.graphics.Typeface.BOLD);
+
+                // Calculăm punctele
+                int puncte = (int) calculatePoints(user);
+                text2.setText("Nivel " + user.nivel_kangaroo + " • " + puncte + " puncte");
+
+                containerLeaderboard.addView(row);
+            }
+        });
+    }
+
+    private float calculatePoints(User u) {
+        int[] stats = {u.genoflexiuni, u.flotari, u.pasi};
+        float currentProgress = KangarooLevel.getOverallProgress(u.nivel_kangaroo, stats);
+        // Formula: Nivelul are ponderea cea mai mare, progresul curent face diferența
+        return (u.nivel_kangaroo * 1000) + (currentProgress * 1000);
     }
 }
