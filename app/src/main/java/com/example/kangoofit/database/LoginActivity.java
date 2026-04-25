@@ -39,22 +39,38 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
-        // 1. Inițializăm Firebase
+        // 1. Verificăm semnalul înainte de orice
+        boolean isDirectLogin = getIntent().getBooleanExtra("DIRECT_GOOGLE_LOGIN", false);
+
+        // 2. Încărcăm layout-ul și butoanele DOAR dacă nu e login direct
+        if (!isDirectLogin) {
+            setContentView(R.layout.activity_login);
+            findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+            findViewById(R.id.btn_google_login).setOnClickListener(v -> signIn());
+        }
+
+        // 3. Inițializăm restul serviciilor (astea merg oricum)
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // 2. Configurăm Google Sign-In
-        // default_web_client_id este generat automat de plugin-ul google-services
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
-
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        // 3. Pregătim Launcher-ul pentru rezultatul logării
+        // Launcher-ul trebuie înregistrat mereu aici (înainte de onStart)
+        setupSignInLauncher();
+
+        // 4. Dacă e direct, sărim la bătaie!
+        if (isDirectLogin) {
+            signIn();
+        }
+    }
+
+    // Mută înregistrarea launcher-ului într-o metodă separată ca să fie curat
+    private void setupSignInLauncher() {
         signInLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -63,18 +79,15 @@ public class LoginActivity extends AppCompatActivity {
                         Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                         try {
                             GoogleSignInAccount account = task.getResult(ApiException.class);
-                            Log.d(TAG, "Google login success, authenticating with Firebase...");
                             firebaseAuthWithGoogle(account.getIdToken());
                         } catch (ApiException e) {
-                            Log.e(TAG, "Google sign in failed. Code: " + e.getStatusCode(), e);
-                            Toast.makeText(this, "Logare Google eșuată: " + e.getStatusCode(), Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Google sign in failed", e);
+                            finish(); // Închidem dacă eșuează
                         }
+                    } else {
+                        finish(); // Închidem dacă userul dă "Back" din fereastra Google
                     }
                 });
-
-        // 4. Setăm click pe butoane
-        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-        findViewById(R.id.btn_google_login).setOnClickListener(v -> signIn());
     }
 
     @Override

@@ -9,6 +9,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -48,14 +50,31 @@ public class ProfileFragment extends Fragment {
 
         btnLoginGoogle.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), LoginActivity.class);
+
+            // Adăugăm această linie:
+            intent.putExtra("DIRECT_GOOGLE_LOGIN", true);
+
             startActivity(intent);
         });
 
         btnLogout.setOnClickListener(v -> {
+            // 1. Deconectare
             mAuth.signOut();
-            Intent intent = new Intent(getActivity(), LoginActivity.class);
-            startActivity(intent);
+
+            // 2. Navigare către Progres folosind ID-urile tale reale
+            if (getActivity() != null) {
+                com.google.android.material.bottomnavigation.BottomNavigationView bottomNav =
+                        getActivity().findViewById(R.id.bottom_navigation); // ID-ul tău din MainActivity
+
+                if (bottomNav != null) {
+                    // ID-ul tău din meniu (nav_progres)
+                    bottomNav.setSelectedItemId(R.id.nav_progres);
+                }
+
+                Toast.makeText(getContext(), "Te-ai deconectat!", Toast.LENGTH_SHORT).show();
+            }
         });
+
 
         return view;
     }
@@ -70,7 +89,10 @@ public class ProfileFragment extends Fragment {
             tvEmail.setText(user.getEmail());
 
             if (user.getPhotoUrl() != null) {
-                Glide.with(this).load(user.getPhotoUrl()).into(imgProfile);
+                Glide.with(this)
+                        .load(user.getPhotoUrl())
+                        .circleCrop()
+                        .into(imgProfile);
             }
         } else {
             layoutLoggedIn.setVisibility(View.GONE);
