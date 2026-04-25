@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">KangooFit</string>
+    <string name="level_label">LEVEL %d</string>
+    <string name="next_level_label">Next: %s</string>
+    <string name="level_max_reached">🏆 Full Adult — max level reached</string>
+
 </resources>
