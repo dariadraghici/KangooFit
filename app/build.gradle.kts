@@ -64,4 +64,13 @@ dependencies {
 
     // Wear OS Data Layer
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
+
+    val camerax_version = "1.3.0"
+    implementation("androidx.camera:camera-core:${camerax_version}")
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    implementation("androidx.camera:camera-view:${camerax_version}")
+
+    // MediaPipe pentru Pose Landmark
+    implementation("com.google.mediapipe:tasks-vision:0.10.9")
 }

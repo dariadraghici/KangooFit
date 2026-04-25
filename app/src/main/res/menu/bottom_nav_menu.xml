@@ -9,9 +9,9 @@
         android:icon="@android:drawable/ic_menu_sort_by_size"
         android:title="Progres" />
     <item
-        android:id="@+id/nav_top"
-        android:icon="@android:drawable/ic_menu_sort_alphabetically"
-        android:title="Top" />
+        android:id="@+id/nav_exercitii"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="Exerciții" />
     <item
         android:id="@+id/nav_comunitate"
         android:icon="@android:drawable/ic_menu_share"
