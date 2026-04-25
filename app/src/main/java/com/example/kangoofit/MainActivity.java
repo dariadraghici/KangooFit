@@ -4,6 +4,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.example.kangoofit.ui.home.HomeFragment;
+import com.example.kangoofit.ui.kangaroo.KangarooFragment;  // ← IMPORT NOU
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -15,7 +16,6 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
 
-        // Setăm fragmentul inițial (Cangurul)
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
@@ -29,16 +29,12 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.nav_cangur) {
                 selectedFragment = new HomeFragment();
             } else if (itemId == R.id.nav_progres) {
-                // selectedFragment = new ProgressFragment(); // Vom crea ulterior
                 selectedFragment = new HomeFragment(); // Placeholder
             } else if (itemId == R.id.nav_top) {
-                // selectedFragment = new LeaderboardFragment(); // Vom crea ulterior
                 selectedFragment = new HomeFragment(); // Placeholder
             } else if (itemId == R.id.nav_comunitate) {
-                // selectedFragment = new CommunityFragment(); // Vom crea ulterior
-                selectedFragment = new HomeFragment(); // Placeholder
+                selectedFragment = new KangarooFragment();  // ← AL 4-LEA BUTON
             } else if (itemId == R.id.nav_profil) {
-                // selectedFragment = new ProfileFragment(); // Vom crea ulterior
                 selectedFragment = new HomeFragment(); // Placeholder
             }
 
