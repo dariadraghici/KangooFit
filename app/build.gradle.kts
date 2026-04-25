@@ -34,6 +34,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.gms:play-services-wearable:18.1.0")
     // Folosim librăriile din catalog (libs) unde există, altfel folosim string-urile
     implementation(libs.appcompat)
     implementation(libs.material)

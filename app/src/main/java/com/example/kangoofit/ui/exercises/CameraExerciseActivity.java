@@ -154,6 +154,7 @@ public class CameraExerciseActivity extends AppCompatActivity {
                     if (movementStage.equals("down")) {
                         repCount++;
                         runOnUiThread(() -> tvCounter.setText("Flotări: " + repCount));
+                        sendRepsToWatch(repCount);
                     }
                     movementStage = "up";
                 } else if (armAngle < 90) {
@@ -170,6 +171,7 @@ public class CameraExerciseActivity extends AppCompatActivity {
                     if (movementStage.equals("down")) {
                         repCount++;
                         runOnUiThread(() -> tvCounter.setText("Genuflexiuni: " + repCount));
+                        sendRepsToWatch(repCount);
                     }
                     movementStage = "up";
                 } else if (legAngle < 100) {
@@ -188,5 +190,25 @@ public class CameraExerciseActivity extends AppCompatActivity {
         }
         // Aici (pe viitor) vei putea salva "repCount" în baza de date/ViewModel
         // pentru a hrăni cangurul și a actualiza clasamentul!
+    }
+
+    private void sendRepsToWatch(int reps) {
+        new Thread(() -> {
+            try {
+                List<com.google.android.gms.wearable.Node> nodes =
+                        com.google.android.gms.tasks.Tasks.await(
+                                com.google.android.gms.wearable.Wearable.getNodeClient(this).getConnectedNodes()
+                        );
+
+                String repString = String.valueOf(reps);
+                for (com.google.android.gms.wearable.Node node : nodes) {
+                    com.google.android.gms.wearable.Wearable.getMessageClient(this).sendMessage(
+                            node.getId(), "/rep_update", repString.getBytes()
+                    );
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 }

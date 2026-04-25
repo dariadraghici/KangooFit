@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "KangooFit"
 include(":app")
- 
+include(":wear")
