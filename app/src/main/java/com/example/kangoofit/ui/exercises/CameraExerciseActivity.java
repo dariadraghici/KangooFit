@@ -171,14 +171,10 @@ public class CameraExerciseActivity extends AppCompatActivity {
             overlayView.setResults(result);
             List<NormalizedLandmark> landmarks = result.landmarks().get(0);
 
-            // actualizeaza campuri din db
-            String firebaseField = exerciseType.equals("PUSHUPS") ? "flotari" : "genoflexiuni";
-
             if (exerciseType.equals("PUSHUPS")) {
                 NormalizedLandmark shoulder = landmarks.get(12);
                 NormalizedLandmark elbow = landmarks.get(14);
                 NormalizedLandmark wrist = landmarks.get(16);
-
                 double armAngle = calculateAngle(shoulder, elbow, wrist);
 
                 if (armAngle > 160) {
@@ -191,11 +187,11 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 } else if (armAngle < 90) {
                     movementStage = "down";
                 }
-            } else if (exerciseType.equals("SQUATS")) {
+            }
+            else if (exerciseType.equals("SQUATS")) {
                 NormalizedLandmark hip = landmarks.get(24);
                 NormalizedLandmark knee = landmarks.get(26);
                 NormalizedLandmark ankle = landmarks.get(28);
-
                 double legAngle = calculateAngle(hip, knee, ankle);
 
                 if (legAngle > 160) {
@@ -209,17 +205,87 @@ public class CameraExerciseActivity extends AppCompatActivity {
                     movementStage = "down";
                 }
             }
+            // --- NOILE EXERCIȚII ---
+            else if (exerciseType.equals("JUMPING_JACKS")) {
+                NormalizedLandmark leftWrist = landmarks.get(15);
+                NormalizedLandmark rightWrist = landmarks.get(16);
+                NormalizedLandmark leftShoulder = landmarks.get(11);
+                NormalizedLandmark rightShoulder = landmarks.get(12);
+                NormalizedLandmark leftAnkle = landmarks.get(27);
+                NormalizedLandmark rightAnkle = landmarks.get(28);
+
+                // Axele Y în Android cresc de sus în jos (capul e Y mic, picioarele sunt Y mare)
+                boolean armsUp = leftWrist.y() < leftShoulder.y() && rightWrist.y() < rightShoulder.y();
+                // Verificăm dacă distanța dintre glezne e mai mare decât distanța dintre umeri * 1.5
+                boolean legsApart = Math.abs(leftAnkle.x() - rightAnkle.x()) > Math.abs(leftShoulder.x() - rightShoulder.x()) * 1.5;
+
+                if (armsUp && legsApart) {
+                    if (movementStage.equals("down")) {
+                        repCount++;
+                        runOnUiThread(() -> tvCounter.setText("Jumping Jacks: " + repCount));
+                        sendRepsToWatch(repCount);
+                    }
+                    movementStage = "up";
+                } else if (!armsUp && !legsApart) {
+                    movementStage = "down";
+                }
+            }
+            else if (exerciseType.equals("BICEP_CURLS")) {
+                // Monitorizăm brațul drept pentru simplitate
+                NormalizedLandmark shoulder = landmarks.get(12);
+                NormalizedLandmark elbow = landmarks.get(14);
+                NormalizedLandmark wrist = landmarks.get(16);
+                double angle = calculateAngle(shoulder, elbow, wrist);
+
+                if (angle < 45) { // Greutatea e la piept (unghi ascuțit)
+                    if (movementStage.equals("down")) {
+                        repCount++;
+                        runOnUiThread(() -> tvCounter.setText("Bicep Curls: " + repCount));
+                        sendRepsToWatch(repCount);
+                    }
+                    movementStage = "up";
+                } else if (angle > 150) { // Brațul e întins jos
+                    movementStage = "down";
+                }
+            }
+            else if (exerciseType.equals("SHOULDER_PRESS")) {
+                NormalizedLandmark shoulder = landmarks.get(12);
+                NormalizedLandmark elbow = landmarks.get(14);
+                NormalizedLandmark wrist = landmarks.get(16);
+                double angle = calculateAngle(shoulder, elbow, wrist);
+
+                // Brațul este întins deasupra capului
+                if (angle > 150 && wrist.y() < shoulder.y()) {
+                    if (movementStage.equals("down")) {
+                        repCount++;
+                        runOnUiThread(() -> tvCounter.setText("Shoulder Press: " + repCount));
+                        sendRepsToWatch(repCount);
+                    }
+                    movementStage = "up";
+                }
+                // Brațul este coborât, cotul îndoit ~90 grade
+                else if (angle < 100 && wrist.y() >= shoulder.y() - 0.2) {
+                    movementStage = "down";
+                }
+            }
         }
     }
 
     private void finishWorkoutAndSave() {
-        // Salvăm TOATE repetările deodată în Firebase
         if (repCount > 0) {
-            String firebaseField = exerciseType.equals("PUSHUPS") ? "flotari" : "genoflexiuni";
-            com.example.kangoofit.database.UserManager.getInstance().incrementStat(firebaseField, repCount);
-        }
+            String firebaseField = "";
+            switch (exerciseType) {
+                case "PUSHUPS": firebaseField = "flotari"; break;
+                case "SQUATS": firebaseField = "genoflexiuni"; break;
+                case "JUMPING_JACKS": firebaseField = "jumping_jacks"; break;
+                case "BICEP_CURLS": firebaseField = "biceps"; break;
+                case "SHOULDER_PRESS": firebaseField = "umeri"; break;
+            }
 
-        // Închidem camera și activitatea pe telefon
+            if (!firebaseField.isEmpty()) {
+                com.example.kangoofit.database.UserManager.getInstance().incrementStat(firebaseField, repCount);
+            }
+        }
         finish();
     }
 

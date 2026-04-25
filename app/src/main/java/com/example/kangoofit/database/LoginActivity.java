@@ -127,9 +127,18 @@ public class LoginActivity extends AppCompatActivity {
                 userData.put("email", fUser.getEmail());
                 userData.put("adresa", "Nesetată");
                 userData.put("createdAt", System.currentTimeMillis());
+
+                // Exerciții vechi
                 userData.put("flotari", 0);
                 userData.put("genoflexiuni", 0);
                 userData.put("pasi", 0);
+
+                // --- AM ADĂUGAT CÂMPURILE NOI PENTRU FIREBASE ---
+                userData.put("jumping_jacks", 0);
+                userData.put("biceps", 0);
+                userData.put("umeri", 0);
+                // ------------------------------------------------
+
                 userData.put("nivel_kangaroo", 1);
                 userData.put("stare_kangaroo", "HAPPY");
 

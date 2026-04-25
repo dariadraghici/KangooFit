@@ -28,6 +28,9 @@ public class ExercisesFragment extends Fragment {
 
         CardView itemFlotari = view.findViewById(R.id.item_flotari);
         CardView itemGenuflexiuni = view.findViewById(R.id.item_genuflexiuni);
+        CardView itemJumpingJacks = view.findViewById(R.id.item_jumping_jacks);
+        CardView itemBiceps = view.findViewById(R.id.item_biceps);
+        CardView itemShoulder = view.findViewById(R.id.item_shoulder);
         tvKangarooStateDesc = view.findViewById(R.id.tv_kangaroo_state_desc);
         imgKangarooState = view.findViewById(R.id.img_kangaroo_state);
 
@@ -53,6 +56,24 @@ public class ExercisesFragment extends Fragment {
         itemGenuflexiuni.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
             intent.putExtra("EXERCISE_TYPE", "SQUATS");
+            startActivity(intent);
+        });
+
+        itemJumpingJacks.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
+            intent.putExtra("EXERCISE_TYPE", "JUMPING_JACKS");
+            startActivity(intent);
+        });
+
+        itemBiceps.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
+            intent.putExtra("EXERCISE_TYPE", "BICEP_CURLS");
+            startActivity(intent);
+        });
+
+        itemShoulder.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), CameraExerciseActivity.class);
+            intent.putExtra("EXERCISE_TYPE", "SHOULDER_PRESS");
             startActivity(intent);
         });
 

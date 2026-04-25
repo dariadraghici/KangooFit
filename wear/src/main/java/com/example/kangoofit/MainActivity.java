@@ -44,7 +44,13 @@ public class MainActivity extends android.app.Activity implements MessageClient.
 
         Button btnPushups = findViewById(R.id.btn_start_pushups);
         Button btnSquats = findViewById(R.id.btn_start_squats);
+        Button btnJacks = findViewById(R.id.btn_start_jacks);
+        Button btnBiceps = findViewById(R.id.btn_start_biceps);
+        Button btnShoulder = findViewById(R.id.btn_start_shoulder);
 
+        btnJacks.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "JUMPING_JACKS"));
+        btnBiceps.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "BICEP_CURLS"));
+        btnShoulder.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "SHOULDER_PRESS"));
         btnPushups.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "PUSHUPS"));
         btnSquats.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "SQUATS"));
 

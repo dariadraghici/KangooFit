@@ -6,51 +6,82 @@
     android:background="@android:color/black"
     android:padding="16dp">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/tv_reps_watch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Alege Exercițiul"
-            android:textColor="@android:color/white"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+        android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/layout_start_buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center">
 
-            <Button
-                android:id="@+id/btn_start_pushups"
+            <TextView
+                android:id="@+id/tv_reps_watch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Alege Exercițiul"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"/>
+
+            <LinearLayout
+                android:id="@+id/layout_start_buttons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Start Flotări"
-                android:backgroundTint="#00A859"
-                android:layout_marginBottom="8dp"/>
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/btn_start_pushups"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Start Flotări"
+                    android:backgroundTint="#00A859"
+                    android:layout_marginBottom="8dp"/>
+
+                <Button
+                    android:id="@+id/btn_start_squats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#00A859"
+                    android:layout_marginBottom="8dp"
+                    android:text="Start Genuflexiuni" />
+
+                <Button
+                    android:id="@+id/btn_start_jacks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#00A859"
+                    android:layout_marginBottom="8dp"
+                    android:text="Start Jumping Jacks" />
+
+                <Button
+                    android:id="@+id/btn_start_biceps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#00A859"
+                    android:layout_marginBottom="8dp"
+                    android:text="Start Bicep Curls" />
+
+                <Button
+                    android:id="@+id/btn_start_shoulder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#00A859"
+                    android:text="Start Umeri" />
+            </LinearLayout>
 
             <Button
-                android:id="@+id/btn_start_squats"
+                android:id="@+id/btn_stop_exercise"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#00A859"
-                android:text="Start Genuflexiuni" />
+                android:text="Stop Antrenament"
+                android:backgroundTint="#D32F2F"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
+
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btn_stop_exercise"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Stop Antrenament"
-            android:backgroundTint="#D32F2F"
-            android:visibility="gone" />
-
-    </LinearLayout>
+    </ScrollView>
 </androidx.wear.widget.BoxInsetLayout>
