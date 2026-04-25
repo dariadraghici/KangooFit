@@ -1,58 +1,69 @@
 package com.example.kangoofit.model;
 
-public class KangarooLevel {
+import com.example.kangoofit.R;
 
+public class KangarooLevel {
     public static final int TOTAL_LEVELS = 6;
 
-    // Level names in English (match kangur_1.png ... kangur_6.png)
     public static final String[] LEVEL_NAMES = {
-            "Newborn Joey",   // level 1 — kangur_1
-            "Small Joey",     // level 2 — kangur_2
-            "Juvenile",       // level 3 — kangur_3
-            "Young Adult",    // level 4 — kangur_4
-            "Sub-adult",      // level 5 — kangur_5
-            "Full Adult"      // level 6 — kangur_6
+            "Pui de Cangur", "Explorator Junior", "Cangur Sportiv",
+            "Săritor de Elită", "Maestru Kanga", "Cangur Legendar"
     };
 
-    // Requirements to advance to the next level
-    // [level][0]=squats [1]=push-ups [2]=pull-ups [3]=steps
+    // Index 0: Squats, 1: Pushups, 2: Steps
+    // Fiecare rând reprezintă un nivel (Nivel 1, Nivel 2...)
     public static final int[][] REQUIREMENTS = {
-            {50,   30,  0,   1000},   // level 1 → 2
-            {100,  60,  10,  5000},   // level 2 → 3
-            {200,  100, 30,  10000},  // level 3 → 4
-            {400,  200, 60,  20000},  // level 4 → 5
-            {800,  400, 100, 50000},  // level 5 → 6
-            {0,    0,   0,   0}       // level 6 — full adult, no requirement
+            {15, 10, 1000},   // Nivel 1
+            {30, 20, 2000},   // Nivel 2
+            {45, 30, 4000},   // Nivel 3
+            {60, 40, 6000},   // Nivel 4
+            {80, 60, 8000},   // Nivel 5
+            {100, 80, 10000}  // Nivel 6
     };
+
+    public static int getRequirement(int level, int type) {
+        if (level < 1 || level > TOTAL_LEVELS) return 99999;
+        return REQUIREMENTS[level - 1][type];
+    }
+
+    public static boolean isLevelComplete(int level, int[] progress) {
+        if (level < 1 || level > TOTAL_LEVELS) return false;
+
+        int[] req = REQUIREMENTS[level - 1];
+
+        // Verificăm fiecare condiție în parte
+        boolean squatsDone = progress[0] >= req[0];
+        boolean pushupsDone = progress[1] >= req[1];
+        boolean stepsDone = progress[2] >= req[2];
+
+        return squatsDone && pushupsDone && stepsDone;
+    }
 
     public static int getDrawableResId(int level) {
         switch (level) {
-            case 1: return com.example.kangoofit.R.drawable.kangur_1;
-            case 2: return com.example.kangoofit.R.drawable.kangur_2;
-            case 3: return com.example.kangoofit.R.drawable.kangur_3;
-            case 4: return com.example.kangoofit.R.drawable.kangur_4;
-            case 5: return com.example.kangoofit.R.drawable.kangur_5;
-            case 6: return com.example.kangoofit.R.drawable.kangur_6;
-            default: return com.example.kangoofit.R.drawable.kangur_1;
+            case 1: return R.drawable.kangur_1;
+            case 2: return R.drawable.kangur_2;
+            case 3: return R.drawable.kangur_3;
+            case 4: return R.drawable.kangur_4;
+            case 5: return R.drawable.kangur_5;
+            case 6: return R.drawable.kangur_6;
+            default: return R.drawable.kangur_1;
         }
     }
 
-    public static int getRequirement(int currentLevel, int exerciseType) {
-        if (currentLevel < 1 || currentLevel > TOTAL_LEVELS) return 0;
-        return REQUIREMENTS[currentLevel - 1][exerciseType];
+    public static float getOverallProgress(int level, int[] progress) {
+        if (level > TOTAL_LEVELS) return 1.0f;
+        if (level < 1) level = 1;
+
+        float p1 = calculatePercent(progress[0], REQUIREMENTS[level - 1][0]);
+        float p2 = calculatePercent(progress[1], REQUIREMENTS[level - 1][1]);
+        float p3 = calculatePercent(progress[2], REQUIREMENTS[level - 1][2]);
+
+        return (p1 + p2 + p3) / 3f;
     }
 
-    public static float getOverallProgress(int currentLevel, int[] progress) {
-        if (currentLevel >= TOTAL_LEVELS) return 1f;
-        int[] req = REQUIREMENTS[currentLevel - 1];
-        float total = 0f;
-        int count = 0;
-        for (int i = 0; i < 4; i++) {
-            if (req[i] > 0) {
-                total += Math.min(1f, (float) progress[i] / req[i]);
-                count++;
-            }
-        }
-        return count > 0 ? total / count : 0f;
+    private static float calculatePercent(int done, int req) {
+        if (req <= 0) return 1.0f;
+        return Math.min(1.0f, (float) done / req);
     }
 }

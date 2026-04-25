@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         // Setăm fragmentul inițial (Cangurul)
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new HomeFragment())
+                    .replace(R.id.fragment_container, new ProgressFragment())
                     .commit();
         }
 
@@ -31,11 +31,8 @@ public class MainActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
 
-            if (itemId == R.id.nav_cangur) {
-                selectedFragment = new HomeFragment();
-            } else if (itemId == R.id.nav_progres) {
+            if (itemId == R.id.nav_progres) {
                  selectedFragment = new ProgressFragment(); // Vom crea ulterior
-//                selectedFragment = new HomeFragment(); // Placeholder
             } else if (itemId == R.id.nav_exercitii) {
                 selectedFragment = new ExercisesFragment();
             } else if (itemId == R.id.nav_comunitate) {

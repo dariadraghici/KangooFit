@@ -1,4 +1,4 @@
-package com.example.kangoofit.viewmodels;
+package com.example.kangoofit.viewmodel;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

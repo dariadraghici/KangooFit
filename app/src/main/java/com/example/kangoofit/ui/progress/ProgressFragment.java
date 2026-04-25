@@ -14,11 +14,17 @@ import androidx.fragment.app.Fragment;
 
 import com.example.kangoofit.R;
 import com.example.kangoofit.database.LoginActivity;
+import com.example.kangoofit.database.UserManager;
+import com.google.firebase.auth.FirebaseAuth;
+
+import org.w3c.dom.Text;
 
 public class ProgressFragment extends Fragment {
 
     private ProgressBar progressBarPasi;
     private TextView txtPasi;
+    private TextView txtFlotari;
+    private TextView txtGenoflexiuni;
 
     @Nullable
     @Override
@@ -28,8 +34,32 @@ public class ProgressFragment extends Fragment {
 
         // Inițializăm elementele din UI
         progressBarPasi = view.findViewById(R.id.progressPasi);
-        // Exemplu: Setăm pașii din cod (aici vei aduce datele din Firebase mai târziu)
-        updateProgress(8450, 10000);
+        txtPasi = view.findViewById(R.id.txtPasi);
+        txtFlotari = view.findViewById(R.id.txtFlotari);
+        txtGenoflexiuni = view.findViewById(R.id.txtGenoflexiuni);
+
+        // update pasi din database
+        int targetPasi = 10000;
+        progressBarPasi.setMax(targetPasi);
+
+        // 3. Ascultăm datele din Firebase prin UserManager-ul tău
+        String uid = FirebaseAuth.getInstance().getUid();
+        if (uid != null) {
+            UserManager.getInstance().listenToUser(uid, user -> {
+                if (isAdded() && user != null) {
+                    // Actualizăm TEXTUL
+                    txtPasi.setText(String.valueOf(user.pasi));
+
+                    // Actualizăm CERCUL (Progresul)
+                    // Progresul se va muta automat la valoarea nouă
+                    progressBarPasi.setProgress(user.pasi);
+
+                    // update flotari si genoflexiuni
+                    txtFlotari.setText(String.valueOf(user.flotari) + " Flotări");
+                    txtGenoflexiuni.setText(String.valueOf(user.genoflexiuni) + " Genoflexiuni");
+                }
+            });
+        }
 
         // --- COD PENTRU BUTONUL DE TEST ---
         Button btnTest = view.findViewById(R.id.btn_test_login);
@@ -48,6 +78,9 @@ public class ProgressFragment extends Fragment {
         if (progressBarPasi != null) {
             progressBarPasi.setMax(targetPasi);
             progressBarPasi.setProgress(pasiActuali);
+        }
+        if (txtPasi != null) {
+            txtPasi.setText(String.valueOf(pasiActuali));
         }
     }
 }

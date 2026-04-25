@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/nav_cangur"
-        android:icon="@drawable/baseline_home_24"
-        android:title="HOME" />
-    <item
         android:id="@+id/nav_progres"
         android:icon="@drawable/ic_trophy"
         android:title="PROGRESS" />
