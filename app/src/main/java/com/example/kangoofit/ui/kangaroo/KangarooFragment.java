@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.kangoofit.R;
 import com.example.kangoofit.model.KangarooLevel;
-import com.example.kangoofit.viewmodels.KangarooViewModel;
+import com.example.kangoofit.viewmodel.KangarooViewModel;
 
 public class KangarooFragment extends Fragment {
 
