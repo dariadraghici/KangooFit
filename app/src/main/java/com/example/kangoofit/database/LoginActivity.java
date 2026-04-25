@@ -147,8 +147,21 @@ public class LoginActivity extends AppCompatActivity {
                     goToMainActivity();
                 }).addOnFailureListener(e -> Log.e(TAG, "Error saving user", e));
             } else {
-                // UTILIZATOR VECHI - Doar intrăm în aplicație
-                goToMainActivity();
+                // UTILIZATOR VECHI - Verificăm dacă are exercițiile noi
+                // Dacă un câmp lipsește, îl adăugăm cu valoarea 0
+                Map<String, Object> updates = new HashMap<>();
+                if (!documentSnapshot.contains("jumping_jacks")) updates.put("jumping_jacks", 0);
+                if (!documentSnapshot.contains("biceps")) updates.put("biceps", 0);
+                if (!documentSnapshot.contains("umeri")) updates.put("umeri", 0);
+
+                if (!updates.isEmpty()) {
+                    userRef.update(updates).addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Profil vechi actualizat cu noile exerciții!");
+                        goToMainActivity();
+                    });
+                } else {
+                    goToMainActivity();
+                }
             }
         });
     }
