@@ -33,7 +33,12 @@ public class WearCommunicationService extends WearableListenerService {
         } else if (path.equals("/stop_exercise")) {
             Intent stopIntent = new Intent("STOP_EXERCISE_ACTION");
             sendBroadcast(stopIntent);
-        } else if (path.equals(STEP_UPDATE_PATH)) {
+        } else if (path.equals("/bpm_update")) {
+            Intent bpmIntent = new Intent("BPM_UPDATE_ACTION");
+            bpmIntent.putExtra("BPM_VALUE", data);
+            sendBroadcast(bpmIntent);
+        }
+        else if (path.equals(STEP_UPDATE_PATH)) {
             // 2. Primim pașii de la ceas și îi salvăm în Firebase
             try {
                 int stepsReceived = Integer.parseInt(data);

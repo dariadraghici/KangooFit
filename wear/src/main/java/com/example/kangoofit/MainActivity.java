@@ -1,18 +1,22 @@
 package com.example.kangoofit;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.TextView;
 import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import android.view.View;
-import android.widget.LinearLayout;
 
-import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.MessageClient;
 import com.google.android.gms.wearable.MessageEvent;
@@ -21,70 +25,69 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends android.app.Activity implements MessageClient.OnMessageReceivedListener {
+public class MainActivity extends Activity implements MessageClient.OnMessageReceivedListener, SensorEventListener {
 
-    private TextView tvRepsWatch;
-    private LinearLayout layoutStartButtons;
-    private Button btnStopExercise;
+    private LinearLayout layoutStartButtons, layoutActiveWorkout;
+    private TextView tvActiveExercise, tvActiveStatus, tvActiveReps, tvActiveBpm;
+
+    private SensorManager sensorManager;
+    private Sensor heartRateSensor;
+
     private static final String START_EXERCISE_PATH = "/start_exercise";
-    private static final String REP_UPDATE_PATH = "/rep_update";
-    private static final int PERMISSION_REQUEST_ACTIVITY_RECOGNITION = 100;
     private static final String STOP_EXERCISE_PATH = "/stop_exercise";
+    private static final String REP_UPDATE_PATH = "/rep_update";
+    private static final String STATUS_UPDATE_PATH = "/status_update";
+    private static final String BPM_UPDATE_PATH = "/bpm_update";
+
+    private static final int PERMISSION_REQUEST_SENSORS = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvRepsWatch = findViewById(R.id.tv_reps_watch);
         layoutStartButtons = findViewById(R.id.layout_start_buttons);
-        btnStopExercise = findViewById(R.id.btn_stop_exercise);
+        layoutActiveWorkout = findViewById(R.id.layout_active_workout);
+
+        tvActiveExercise = findViewById(R.id.tv_active_exercise);
+        tvActiveStatus = findViewById(R.id.tv_active_status);
+        tvActiveReps = findViewById(R.id.tv_active_reps);
+        tvActiveBpm = findViewById(R.id.tv_active_bpm);
 
         Button btnPushups = findViewById(R.id.btn_start_pushups);
         Button btnSquats = findViewById(R.id.btn_start_squats);
         Button btnJacks = findViewById(R.id.btn_start_jacks);
         Button btnBiceps = findViewById(R.id.btn_start_biceps);
         Button btnShoulder = findViewById(R.id.btn_start_shoulder);
+        Button btnStopExercise = findViewById(R.id.btn_stop_exercise);
 
-        btnJacks.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "JUMPING_JACKS"));
-        btnBiceps.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "BICEP_CURLS"));
-        btnShoulder.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "SHOULDER_PRESS"));
-        btnPushups.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "PUSHUPS"));
-        btnSquats.setOnClickListener(v -> sendCommandToPhone(START_EXERCISE_PATH, "SQUATS"));
+        btnPushups.setOnClickListener(v -> startWorkout("PUSHUPS", "Push-ups"));
+        btnSquats.setOnClickListener(v -> startWorkout("SQUATS", "Squats"));
+        btnJacks.setOnClickListener(v -> startWorkout("JUMPING_JACKS", "Jumping Jacks"));
+        btnBiceps.setOnClickListener(v -> startWorkout("BICEP_CURLS", "Bicep Curls"));
+        btnShoulder.setOnClickListener(v -> startWorkout("SHOULDER_PRESS", "Shoulder Press"));
 
-        // Logica pentru butonul de STOP
         btnStopExercise.setOnClickListener(v -> {
             sendCommandToPhone(STOP_EXERCISE_PATH, "STOP");
-            // Resetăm UI-ul
-            layoutStartButtons.setVisibility(View.VISIBLE);
-            btnStopExercise.setVisibility(View.GONE);
-            tvRepsWatch.setText("Alege Exercițiul");
+            stopWorkout();
         });
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
+        }
 
         checkPermissionsAndStartService();
     }
 
     private void checkPermissionsAndStartService() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACTIVITY_RECOGNITION},
-                    PERMISSION_REQUEST_ACTIVITY_RECOGNITION);
+        String[] permissions = {Manifest.permission.ACTIVITY_RECOGNITION, Manifest.permission.BODY_SENSORS};
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_SENSORS);
         } else {
             startStepService();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_ACTIVITY_RECOGNITION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startStepService();
-            } else {
-                tvRepsWatch.setText("Permisiune refuzată pt pași");
-            }
         }
     }
 
@@ -93,26 +96,52 @@ public class MainActivity extends android.app.Activity implements MessageClient.
         ContextCompat.startForegroundService(this, serviceIntent);
     }
 
-    private void sendCommandToPhone(String path, String payload) {
-        if (path.equals(START_EXERCISE_PATH)) {
-            tvRepsWatch.setText("Se pornește camera...");
-            layoutStartButtons.setVisibility(View.GONE);
-            btnStopExercise.setVisibility(View.VISIBLE);
-        }
+    private void startWorkout(String typeCode, String displayName) {
+        sendCommandToPhone(START_EXERCISE_PATH, typeCode);
 
+        layoutStartButtons.setVisibility(View.GONE);
+        layoutActiveWorkout.setVisibility(View.VISIBLE);
+
+        tvActiveExercise.setText(displayName);
+        tvActiveReps.setText("Reps: 0");
+        tvActiveStatus.setText("Status: Connecting...");
+        tvActiveBpm.setText("BPM: --");
+
+        if (heartRateSensor != null) {
+            sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    private void stopWorkout() {
+        layoutStartButtons.setVisibility(View.VISIBLE);
+        layoutActiveWorkout.setVisibility(View.GONE);
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+    }
+
+    private void sendCommandToPhone(String path, String payload) {
         new Thread(() -> {
             try {
                 List<Node> nodes = Tasks.await(Wearable.getNodeClient(this).getConnectedNodes());
                 for (Node node : nodes) {
-                    Wearable.getMessageClient(this).sendMessage(
-                            node.getId(), path, payload.getBytes(StandardCharsets.UTF_8)
-                    );
+                    Wearable.getMessageClient(this).sendMessage(node.getId(), path, payload.getBytes(StandardCharsets.UTF_8));
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         }).start();
     }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
+            int bpm = (int) event.values[0];
+            runOnUiThread(() -> tvActiveBpm.setText("BPM: " + bpm));
+            sendCommandToPhone(BPM_UPDATE_PATH, String.valueOf(bpm));
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
     protected void onResume() {
@@ -126,12 +155,22 @@ public class MainActivity extends android.app.Activity implements MessageClient.
         Wearable.getMessageClient(this).removeListener(this);
     }
 
-    // Aici primim repetările de la telefon
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        if (messageEvent.getPath().equals(REP_UPDATE_PATH)) {
-            String reps = new String(messageEvent.getData(), StandardCharsets.UTF_8);
-            runOnUiThread(() -> tvRepsWatch.setText("Repetări: " + reps));
-        }
+        String path = messageEvent.getPath();
+        String data = new String(messageEvent.getData(), StandardCharsets.UTF_8);
+
+        runOnUiThread(() -> {
+            if (path.equals(REP_UPDATE_PATH)) {
+                tvActiveReps.setText("Reps: " + data);
+            } else if (path.equals(STATUS_UPDATE_PATH)) {
+                tvActiveStatus.setText("Status: " + data);
+                if (data.equals("Counting...")) {
+                    tvActiveStatus.setTextColor(android.graphics.Color.GREEN);
+                } else {
+                    tvActiveStatus.setTextColor(android.graphics.Color.YELLOW);
+                }
+            }
+        });
     }
 }
