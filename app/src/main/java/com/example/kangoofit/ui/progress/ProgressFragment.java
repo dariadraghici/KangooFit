@@ -1,6 +1,5 @@
 package com.example.kangoofit.ui.progress;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,23 +13,27 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.kangoofit.R;
-import com.example.kangoofit.database.LoginActivity;
 import com.example.kangoofit.database.UserManager;
-import com.example.kangoofit.model.KangarooLevel; // Importă modelul de nivele
+import com.example.kangoofit.model.KangarooLevel;
 import com.example.kangoofit.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class ProgressFragment extends Fragment {
 
     private ProgressBar progressBarPasi, progressBarCalorii;
-    private TextView txtPasi, txtCalorii, txtState;
+    private TextView txtPasi, txtCalorii;
     private ImageView imgMascota;
     private LinearLayout containerLeaderboard;
 
-    // 1. Adăugăm aceste variabile pentru a ține minte valorile curente
+    // Variabile pentru Pași
     private int pasiActuali = 0;
-    private int targetActual = 0;
-    private boolean isShowingDetail = false; // Pentru a preveni bug-urile la click-uri repetate
+    private int targetPasiActual = 0;
+    private boolean isShowingStepDetail = false;
+
+    // Variabile pentru Calorii
+    private int caloriiActuale = 0;
+    private final int targetCaloriiStatic = 500; // Target-ul cerut de tine
+    private boolean isShowingCalorieDetail = false;
 
     @Nullable
     @Override
@@ -42,12 +45,12 @@ public class ProgressFragment extends Fragment {
         txtPasi = view.findViewById(R.id.txtPasi);
         progressBarCalorii = view.findViewById(R.id.progressCalorii);
         txtCalorii = view.findViewById(R.id.txtCalorii);
-        txtState = view.findViewById(R.id.txtState);
         imgMascota = view.findViewById(R.id.imgMascota);
         containerLeaderboard = view.findViewById(R.id.container_leaderboard);
 
-        // 2. Configurări inițiale
+        // 2. Setăm Click Listeners pentru efectul de "Peek"
         txtPasi.setOnClickListener(v -> showStepDetails());
+        txtCalorii.setOnClickListener(v -> showCalorieDetails());
 
         String uid = FirebaseAuth.getInstance().getUid();
         if (uid != null) {
@@ -55,38 +58,29 @@ public class ProgressFragment extends Fragment {
                 if (isAdded() && user != null) {
                     int nivel = user.nivel_kangaroo > 0 ? user.nivel_kangaroo : 1;
 
-                    // --- LOGICA PENTRU TARGET DINAMIC ---
-                    // Luăm target-ul de pași specific nivelului curent (Type 2 = Pasi)
+                    // --- LOGICA PAȘI ---
                     pasiActuali = user.pasi;
-                    targetActual = KangarooLevel.getRequirement(nivel, 2);
-
-                    progressBarPasi.setMax(targetActual);
+                    targetPasiActual = KangarooLevel.getRequirement(nivel, 2);
+                    progressBarPasi.setMax(targetPasiActual);
                     progressBarPasi.setProgress(pasiActuali);
 
-                    // Dacă nu suntem în modul de detalii, afișăm doar pașii
-                    if (!isShowingDetail) {
+                    if (!isShowingStepDetail) {
                         txtPasi.setText(String.valueOf(pasiActuali));
                     }
 
-                    // Logica Calorii (Calcul estimativ)
-                    // Formula: pasi*0.04 + flotari*0.5 + genoflexiuni*0.4
-                    int caloriiArse = (int) ((user.pasi * 0.04) + (user.flotari * 0.5) + (user.genoflexiuni * 0.4));
-                    int targetCalorii = 500; // Target static sau calculat din KangarooLevel
-                    progressBarCalorii.setMax(targetCalorii);
-                    progressBarCalorii.setProgress(caloriiArse);
-                    txtCalorii.setText(String.valueOf(caloriiArse));
+                    // --- LOGICA CALORII ---
+                    // Calculăm caloriile conform formulei tale
+                    caloriiActuale = (int) ((user.pasi * 0.04) + (user.flotari * 0.5) + (user.genoflexiuni * 0.4));
 
-                    // Mascota si Stare
+                    progressBarCalorii.setMax(targetCaloriiStatic);
+                    progressBarCalorii.setProgress(caloriiActuale);
+
+                    if (!isShowingCalorieDetail) {
+                        txtCalorii.setText(String.valueOf(caloriiActuale));
+                    }
+
+                    // Actualizăm restul UI-ului
                     imgMascota.setImageResource(KangarooLevel.getDrawableResId(nivel));
-                    int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
-                    float progress = KangarooLevel.getOverallProgress(nivel, stats);
-
-                    String mood;
-                    if (progress < 0.3f) mood = "SAD";
-                    else if (progress < 0.7f) mood = "NEUTRAL";
-                    else mood = "HAPPY";
-                    txtState.setText("State: " + mood);
-
                     loadLeaderboard();
                 }
             });
@@ -96,14 +90,28 @@ public class ProgressFragment extends Fragment {
         return view;
     }
 
+    // Funcția pentru afișare detalii Pași (2 secunde)
     private void showStepDetails() {
-        if (isShowingDetail) return;
-        isShowingDetail = true;
-        txtPasi.setText(pasiActuali + " / " + targetActual);
+        if (isShowingStepDetail) return;
+        isShowingStepDetail = true;
+        txtPasi.setText(pasiActuali + " / " + targetPasiActual);
         txtPasi.postDelayed(() -> {
             if (isAdded()) {
                 txtPasi.setText(String.valueOf(pasiActuali));
-                isShowingDetail = false;
+                isShowingStepDetail = false;
+            }
+        }, 2000);
+    }
+
+    // Funcția pentru afișare detalii Calorii (2 secunde)
+    private void showCalorieDetails() {
+        if (isShowingCalorieDetail) return;
+        isShowingCalorieDetail = true;
+        txtCalorii.setText(caloriiActuale + " / " + targetCaloriiStatic);
+        txtCalorii.postDelayed(() -> {
+            if (isAdded()) {
+                txtCalorii.setText(String.valueOf(caloriiActuale));
+                isShowingCalorieDetail = false;
             }
         }, 2000);
     }
