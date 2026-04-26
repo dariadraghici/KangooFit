@@ -15,6 +15,8 @@ public class User {
     public int flotari, genoflexiuni, pasi, nivel_kangaroo;
     public int jumping_jacks, biceps, umeri;
 
+    public long lastExerciseTimestamp;
+
     // CONSTRUCTORUL GOL ESTE OBLIGATORIU pentru Firebase
     public User() {}
 

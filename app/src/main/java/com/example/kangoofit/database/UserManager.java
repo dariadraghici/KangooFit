@@ -2,6 +2,7 @@ package com.example.kangoofit.database;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 
@@ -45,8 +46,19 @@ public class UserManager {
     // 3. Incrementare (folosit special pentru exerciții: flotări++, pași++)
     public void incrementStat(String field, int amount) {
         String uid = mAuth.getUid();
-        if (uid != null) {
-            db.collection("users").document(uid).update(field, com.google.firebase.firestore.FieldValue.increment(amount));
+        if (uid == null) return;
+
+        DocumentReference userRef = db.collection("users").document(uid);
+
+        if (field.equals("pasi")) {
+            // Doar pașii, fără timestamp
+            userRef.update(field, FieldValue.increment(amount));
+        } else {
+            // Exercițiu fizic -> Update stat + Timestamp (într-o singură interogare)
+            userRef.update(
+                    field, FieldValue.increment(amount),
+                    "lastExerciseTimestamp", System.currentTimeMillis()
+            );
         }
     }
 

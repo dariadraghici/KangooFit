@@ -115,12 +115,33 @@ public class ExercisesFragment extends Fragment {
 
     private void updateKangarooStateUI(float progress, int level) {
         if (!isAdded()) return;
-        String mood = progress < 0.3f ? "sad" : (progress < 0.7f ? "neutral" : "happy");
-        String description = mood.toUpperCase().equals("HAPPY") ? "Your kangaroo is HAPPY!\nKeep it up!" : "Your kangaroo is " + mood.toUpperCase() + ".\nTime to change that!";
 
-        tvKangarooStateDesc.setText(description);
-        String imageName = "kangaroo_" + mood + "_" + level;
-        int resId = getResources().getIdentifier(imageName, "drawable", requireContext().getPackageName());
-        imgKangarooSprite.setImageResource(resId != 0 ? resId : R.drawable.kangaroo_neutral);
+        String uid = FirebaseAuth.getInstance().getUid();
+        if (uid != null) {
+            UserManager.getInstance().listenToUser(uid, user -> {
+                if (isAdded() && user != null) {
+                    long currentTime = System.currentTimeMillis();
+                    long fiveMinutesInMillis = 5 * 60 * 1000; // 300.000 ms
+
+                    String mood;
+                    String stareText;
+
+                    if (currentTime - user.lastExerciseTimestamp <= fiveMinutesInMillis) {
+                        mood = "HAPPY";
+                    } else {
+                        mood = "SAD";
+                    }
+
+                    user.stare_kangaroo = mood;
+
+                    String description = mood.toUpperCase().equals("HAPPY") ? "Your kangaroo is HAPPY!\nKeep it up!" : "Your kangaroo is " + mood.toUpperCase() + ".\nTime to change that!";
+
+                    tvKangarooStateDesc.setText(description);
+                    String imageName = "kangaroo_" + mood + "_" + level;
+                    int resId = getResources().getIdentifier(imageName, "drawable", requireContext().getPackageName());
+                    imgKangarooSprite.setImageResource(resId != 0 ? resId : R.drawable.kangaroo_neutral);
+                }
+            });
+        }
     }
 }

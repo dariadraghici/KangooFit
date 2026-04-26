@@ -80,12 +80,9 @@ public class ProgressFragment extends Fragment {
                     txtGenoflexiuni.setText(user.genoflexiuni + " " + getString(R.string.label_squats));
 
                     // Actualizăm starea (HAPPY, NEUTRAL, SAD)
-                    float progress = KangarooLevel.getOverallProgress(nivel, stats);
-                    String mood;
-                    if (progress < 0.3f) mood = "SAD";
-                    else if (progress < 0.7f) mood = "NEUTRAL";
-                    else mood = "HAPPY";
-                    txtState.setText("State: " + mood);
+
+
+                    txtState.setText("");
 
                     // Reîncărcăm leaderboard-ul când se schimbă datele
                     loadLeaderboard();
