@@ -5,8 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView; // Import necesar
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -23,12 +22,9 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class ProgressFragment extends Fragment {
 
-    private ProgressBar progressBarPasi;
-    private TextView txtPasi;
-    private TextView txtFlotari;
-    private TextView txtGenoflexiuni;
-    private ImageView imgMascota; // Variabilă pentru imaginea de banner
-
+    private ProgressBar progressBarPasi, progressBarCalorii;
+    private TextView txtPasi, txtCalorii, txtState;
+    private ImageView imgMascota;
     private LinearLayout containerLeaderboard;
 
     // 1. Adăugăm aceste variabile pentru a ține minte valorile curente
@@ -44,9 +40,11 @@ public class ProgressFragment extends Fragment {
         // 1. Inițializăm elementele din UI
         progressBarPasi = view.findViewById(R.id.progressPasi);
         txtPasi = view.findViewById(R.id.txtPasi);
-        txtFlotari = view.findViewById(R.id.txtFlotari);
-        txtGenoflexiuni = view.findViewById(R.id.txtGenoflexiuni);
-        imgMascota = view.findViewById(R.id.imgMascota); // ID-ul din XML-ul tău
+        progressBarCalorii = view.findViewById(R.id.progressCalorii);
+        txtCalorii = view.findViewById(R.id.txtCalorii);
+        txtState = view.findViewById(R.id.txtState);
+        imgMascota = view.findViewById(R.id.imgMascota);
+        containerLeaderboard = view.findViewById(R.id.container_leaderboard);
 
         // 2. Configurări inițiale
         txtPasi.setOnClickListener(v -> showStepDetails());
@@ -70,64 +68,51 @@ public class ProgressFragment extends Fragment {
                         txtPasi.setText(String.valueOf(pasiActuali));
                     }
 
+                    // Logica Calorii (Calcul estimativ)
+                    // Formula: pasi*0.04 + flotari*0.5 + genoflexiuni*0.4
+                    int caloriiArse = (int) ((user.pasi * 0.04) + (user.flotari * 0.5) + (user.genoflexiuni * 0.4));
+                    int targetCalorii = 500; // Target static sau calculat din KangarooLevel
+                    progressBarCalorii.setMax(targetCalorii);
+                    progressBarCalorii.setProgress(caloriiArse);
+                    txtCalorii.setText(String.valueOf(caloriiArse));
 
-                    // Actualizăm restul UI-ului
-                    int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
+                    // Mascota si Stare
                     imgMascota.setImageResource(KangarooLevel.getDrawableResId(nivel));
-                    txtFlotari.setText(user.flotari + " " + getString(R.string.label_pushups));
-                    txtGenoflexiuni.setText(user.genoflexiuni + " " + getString(R.string.label_squats));
+                    int[] stats = new int[]{user.genoflexiuni, user.flotari, user.pasi};
+                    float progress = KangarooLevel.getOverallProgress(nivel, stats);
 
-                    // Actualizăm starea (HAPPY, NEUTRAL, SAD)
+                    String mood;
+                    if (progress < 0.3f) mood = "SAD";
+                    else if (progress < 0.7f) mood = "NEUTRAL";
+                    else mood = "HAPPY";
+                    txtState.setText("State: " + mood);
 
-
-                    // Reîncărcăm leaderboard-ul când se schimbă datele
                     loadLeaderboard();
                 }
             });
         }
 
-
-
-        // LEADERBORD TYPE SHI
-        containerLeaderboard = view.findViewById(R.id.container_leaderboard);
-
-        // Invocă funcția de leaderboard
         loadLeaderboard();
-
-
-
         return view;
     }
 
-
     private void showStepDetails() {
-        if (isShowingDetail) return; // Evităm suprapunerea timer-elor
-
+        if (isShowingDetail) return;
         isShowingDetail = true;
         txtPasi.setText(pasiActuali + " / " + targetActual);
-
-        // Așteptăm 2 secunde (2000 milisecunde)
         txtPasi.postDelayed(() -> {
-            if (isAdded()) { // Verificăm dacă userul mai e pe pagină
+            if (isAdded()) {
                 txtPasi.setText(String.valueOf(pasiActuali));
                 isShowingDetail = false;
             }
         }, 2000);
     }
 
-    // Metoda pentru calcul și afișare
     private void loadLeaderboard() {
         UserManager.getInstance().getTopUsers(users -> {
             if (!isAdded()) return;
+            users.sort((u1, u2) -> Float.compare(calculatePoints(u2), calculatePoints(u1)));
 
-            // 1. Calculăm punctele pentru fiecare user și sortăm
-            users.sort((u1, u2) -> {
-                float pts1 = calculatePoints(u1);
-                float pts2 = calculatePoints(u2);
-                return Float.compare(pts2, pts1); // Sortare descrescătoare
-            });
-
-            // 2. Curățăm containerul și afișăm primii 3
             containerLeaderboard.removeAllViews();
             int topCount = Math.min(users.size(), 3);
 
@@ -138,15 +123,11 @@ public class ProgressFragment extends Fragment {
                 TextView text2 = row.findViewById(android.R.id.text2);
 
                 String medal = (i == 0) ? "🥇 " : (i == 1) ? "🥈 " : "🥉 ";
-
-                // Verificăm dacă numele este null și punem ceva în loc (pentru debug)
                 String displayName = (user.name != null && !user.name.isEmpty()) ? user.name : getString(R.string.label_anonymous);
+
                 text1.setText(medal + displayName);
                 text1.setTypeface(null, android.graphics.Typeface.BOLD);
-
-                // Calculăm punctele
-                int puncte = (int) calculatePoints(user);
-                text2.setText("Level " + user.nivel_kangaroo + " • " + puncte + " points");
+                text2.setText("Level " + user.nivel_kangaroo + " • " + (int)calculatePoints(user) + " points");
 
                 containerLeaderboard.addView(row);
             }
@@ -156,7 +137,6 @@ public class ProgressFragment extends Fragment {
     private float calculatePoints(User u) {
         int[] stats = {u.genoflexiuni, u.flotari, u.pasi};
         float currentProgress = KangarooLevel.getOverallProgress(u.nivel_kangaroo, stats);
-        // Formula: Nivelul are ponderea cea mai mare, progresul curent face diferența
         return (u.nivel_kangaroo * 1000) + (currentProgress * 1000);
     }
 }
