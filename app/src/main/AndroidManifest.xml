@@ -24,6 +24,7 @@
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/step_update" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/stop_exercise" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/start_exercise" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/bpm_update" />
             </intent-filter>
         </service>
 
