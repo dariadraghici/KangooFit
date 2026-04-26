@@ -93,6 +93,16 @@
                     android:textStyle="bold"/>
             </LinearLayout>
         </LinearLayout>
+        <Button
+            android:id="@+id/btnStopPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="STOP WORKOUT"
+            android:backgroundTint="#D32F2F"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

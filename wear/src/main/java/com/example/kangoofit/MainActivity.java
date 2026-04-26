@@ -1,5 +1,6 @@
 package com.example.kangoofit;
 
+import android.os.Build;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -41,6 +43,8 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
     private static final String BPM_UPDATE_PATH = "/bpm_update";
 
     private static final int PERMISSION_REQUEST_SENSORS = 100;
+    private static final int PERMISSION_REQUEST_HEART_RATE = 101;
+    private static final String PERMISSION_READ_HEART_RATE = "android.permission.health.READ_HEART_RATE";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,15 +66,15 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
         Button btnShoulder = findViewById(R.id.btn_start_shoulder);
         Button btnStopExercise = findViewById(R.id.btn_stop_exercise);
 
-        btnPushups.setOnClickListener(v -> startWorkout("PUSHUPS", "Push-ups"));
-        btnSquats.setOnClickListener(v -> startWorkout("SQUATS", "Squats"));
-        btnJacks.setOnClickListener(v -> startWorkout("JUMPING_JACKS", "Jumping Jacks"));
-        btnBiceps.setOnClickListener(v -> startWorkout("BICEP_CURLS", "Bicep Curls"));
-        btnShoulder.setOnClickListener(v -> startWorkout("SHOULDER_PRESS", "Shoulder Press"));
+        btnPushups.setOnClickListener(v -> { sendCommandToPhone(START_EXERCISE_PATH, "PUSHUPS"); showActiveWorkoutScreen("Push-ups"); });
+        btnSquats.setOnClickListener(v -> { sendCommandToPhone(START_EXERCISE_PATH, "SQUATS"); showActiveWorkoutScreen("Squats"); });
+        btnJacks.setOnClickListener(v -> { sendCommandToPhone(START_EXERCISE_PATH, "JUMPING_JACKS"); showActiveWorkoutScreen("Jumping Jacks"); });
+        btnBiceps.setOnClickListener(v -> { sendCommandToPhone(START_EXERCISE_PATH, "BICEP_CURLS"); showActiveWorkoutScreen("Bicep Curls"); });
+        btnShoulder.setOnClickListener(v -> { sendCommandToPhone(START_EXERCISE_PATH, "SHOULDER_PRESS"); showActiveWorkoutScreen("Shoulder Press"); });
 
         btnStopExercise.setOnClickListener(v -> {
             sendCommandToPhone(STOP_EXERCISE_PATH, "STOP");
-            stopWorkout();
+            hideActiveWorkoutScreen();
         });
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -82,37 +86,46 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
     }
 
     private void checkPermissionsAndStartService() {
-        String[] permissions = {Manifest.permission.ACTIVITY_RECOGNITION, Manifest.permission.BODY_SENSORS};
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_SENSORS);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+            // Pentru activitate fizică lăsăm ActivityCompat pentru că e la pornirea aplicației
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PERMISSION_REQUEST_SENSORS);
         } else {
             startStepService();
         }
     }
 
-    private void startStepService() {
-        Intent serviceIntent = new Intent(this, StepTrackingService.class);
-        ContextCompat.startForegroundService(this, serviceIntent);
-    }
-
-    private void startWorkout(String typeCode, String displayName) {
-        sendCommandToPhone(START_EXERCISE_PATH, typeCode);
-
+    private void showActiveWorkoutScreen(String displayName) {
         layoutStartButtons.setVisibility(View.GONE);
         layoutActiveWorkout.setVisibility(View.VISIBLE);
 
         tvActiveExercise.setText(displayName);
         tvActiveReps.setText("Reps: 0");
         tvActiveStatus.setText("Status: Connecting...");
-        tvActiveBpm.setText("BPM: --");
 
-        if (heartRateSensor != null) {
-            sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        // Apelăm metoda nouă dedicată pulsului
+        checkAndRequestHeartRatePermission();
+    }
+
+    // --- METODA NOUĂ ---
+    private void checkAndRequestHeartRatePermission() {
+        if (Build.VERSION.SDK_INT >= 36) {
+            if (ContextCompat.checkSelfPermission(this, PERMISSION_READ_HEART_RATE) != PackageManager.PERMISSION_GRANTED) {
+                tvActiveBpm.setText("BPM: Need Permission");
+                requestPermissions(new String[]{PERMISSION_READ_HEART_RATE}, PERMISSION_REQUEST_HEART_RATE);
+            } else {
+                startHeartRateSensor();
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED) {
+                tvActiveBpm.setText("BPM: Need Permission");
+                requestPermissions(new String[]{Manifest.permission.BODY_SENSORS}, PERMISSION_REQUEST_HEART_RATE);
+            } else {
+                startHeartRateSensor();
+            }
         }
     }
 
-    private void stopWorkout() {
+    private void hideActiveWorkoutScreen() {
         layoutStartButtons.setVisibility(View.VISIBLE);
         layoutActiveWorkout.setVisibility(View.GONE);
         if (sensorManager != null) {
@@ -171,6 +184,52 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
                     tvActiveStatus.setTextColor(android.graphics.Color.YELLOW);
                 }
             }
+            else if (path.equals("/start_exercise_from_phone")) {
+                String displayName = "Workout";
+                switch (data) {
+                    case "PUSHUPS": displayName = "Push-ups"; break;
+                    case "SQUATS": displayName = "Squats"; break;
+                    case "JUMPING_JACKS": displayName = "Jumping Jacks"; break;
+                    case "BICEP_CURLS": displayName = "Bicep Curls"; break;
+                    case "SHOULDER_PRESS": displayName = "Shoulder Press"; break;
+                }
+                showActiveWorkoutScreen(displayName);
+            }
+            else if (path.equals("/stop_exercise_from_phone")) {
+                hideActiveWorkoutScreen();
+            }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISSION_REQUEST_SENSORS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startStepService();
+            }
+        }
+        else if (requestCode == PERMISSION_REQUEST_HEART_RATE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startHeartRateSensor();
+            } else {
+                tvActiveBpm.setText("BPM: Denied");
+            }
+        }
+    }
+
+    private void startStepService() {
+        Intent serviceIntent = new Intent(this, StepTrackingService.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
+    }
+
+    private void startHeartRateSensor() {
+        if (heartRateSensor != null) {
+            tvActiveBpm.setText("BPM: Calibrating...");
+            sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        } else {
+            tvActiveBpm.setText("BPM: Not Found");
+        }
     }
 }

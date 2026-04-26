@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,7 +48,7 @@ public class CameraExerciseActivity extends AppCompatActivity {
     private String exerciseType = "";
     private int repCount = 0;
     private String movementStage = "up";
-    private String currentStatus = ""; // Reține ultimul status pentru a nu spama ceasul cu mesaje identice
+    private String currentStatus = "";
 
     private BroadcastReceiver wearDataReceiver = new BroadcastReceiver() {
         @Override
@@ -87,6 +88,15 @@ public class CameraExerciseActivity extends AppCompatActivity {
         }
         tvExerciseName.setText(displayName);
         updateStatus("Stand in frame!");
+
+        // NOU: Trimitem semnal ceasului că am pornit de pe telefon
+        sendDataToWatch("/start_exercise_from_phone", exerciseType);
+
+        // NOU: Logica butonului de STOP de pe telefon
+        Button btnStopPhone = findViewById(R.id.btnStopPhone);
+        btnStopPhone.setOnClickListener(v -> {
+            finishWorkoutAndSave();
+        });
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
@@ -138,9 +148,9 @@ public class CameraExerciseActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 tvStatus.setText("Status: " + newStatus);
                 if (newStatus.equals("Counting...")) {
-                    tvStatus.setTextColor(android.graphics.Color.parseColor("#00A859")); // Verde
+                    tvStatus.setTextColor(android.graphics.Color.parseColor("#00A859"));
                 } else {
-                    tvStatus.setTextColor(android.graphics.Color.parseColor("#FFEB3B")); // Galben/Avertizare
+                    tvStatus.setTextColor(android.graphics.Color.parseColor("#FFEB3B"));
                 }
             });
             sendStatusToWatch(newStatus);
@@ -170,22 +180,17 @@ public class CameraExerciseActivity extends AppCompatActivity {
                         int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
 
                         Matrix matrix = new Matrix();
-
-                        // 1. ROTIRE: Dacă imaginea e landscape dar ecranul e portrait, o rotim să o facem dreaptă
                         if (bitmap.getWidth() > bitmap.getHeight() && rotationDegrees != 0) {
                             matrix.postRotate(rotationDegrees);
                         }
                         Bitmap uprightBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
 
-                        // 2. OGLINDIRE: Pentru camera frontală, imaginea trebuie să fie exact ca în oglindă
                         Matrix flipMatrix = new Matrix();
                         flipMatrix.postScale(-1f, 1f, uprightBitmap.getWidth() / 2f, uprightBitmap.getHeight() / 2f);
                         Bitmap finalBitmap = Bitmap.createBitmap(uprightBitmap, 0, 0, uprightBitmap.getWidth(), uprightBitmap.getHeight(), flipMatrix, true);
 
-                        // 3. Spunem Overlay-ului proporțiile exacte pe thread-ul de UI
-                        runOnUiThread(() -> overlayView.setImageDimensions(finalBitmap.getWidth(), finalBitmap.getHeight()));
+                        overlayView.setImageDimensions(finalBitmap.getWidth(), finalBitmap.getHeight());
 
-                        // 4. Analizăm imaginea finală și corectă!
                         MPImage mpImage = new BitmapImageBuilder(finalBitmap).build();
                         long timestampMs = imageProxy.getImageInfo().getTimestamp() / 1000000;
                         poseLandmarker.detectAsync(mpImage, timestampMs);
@@ -216,69 +221,127 @@ public class CameraExerciseActivity extends AppCompatActivity {
         return angle;
     }
 
-    // NOU: Funcție care verifică dacă o articulație e în cadru (0.0 -> 1.0) și AI-ul e sigur de ea
+    // Am relaxat validarea: ne interesează doar ca AI-ul să fie sigur că vede osul (> 40% încredere)
     private boolean isLandmarkValid(NormalizedLandmark lm) {
-        if (lm.x() < 0.0f || lm.x() > 1.0f || lm.y() < 0.0f || lm.y() > 1.0f) {
-            return false;
-        }
-        // Dacă vizibilitatea e prea mică, înseamnă că AI-ul ghicește (ex: e acoperită de corp)
-        if (lm.visibility().isPresent() && lm.visibility().get() < 0.5f) {
+        if (lm.visibility().isPresent() && lm.visibility().get() < 0.4f) {
             return false;
         }
         return true;
     }
 
+    private void incrementRep() {
+        repCount++;
+        runOnUiThread(() -> tvReps.setText("Reps: " + repCount));
+        sendDataToWatch("/rep_update", String.valueOf(repCount));
+    }
+
     private void onPoseDetected(PoseLandmarkerResult result, MPImage mpImage) {
-        if (!result.landmarks().isEmpty()) {
-            overlayView.setResults(result);
-            List<NormalizedLandmark> landmarks = result.landmarks().get(0);
-
-            boolean isReady = false;
-
-            switch (exerciseType) {
-                case "PUSHUPS":
-                case "BICEP_CURLS":
-                case "SHOULDER_PRESS":
-                    isReady = isLandmarkValid(landmarks.get(12)) && isLandmarkValid(landmarks.get(14)) && isLandmarkValid(landmarks.get(16));
-                    break;
-                case "SQUATS":
-                    isReady = isLandmarkValid(landmarks.get(24)) && isLandmarkValid(landmarks.get(26)) && isLandmarkValid(landmarks.get(28));
-                    break;
-                case "JUMPING_JACKS":
-                    isReady = isLandmarkValid(landmarks.get(15)) && isLandmarkValid(landmarks.get(16)) &&
-                            isLandmarkValid(landmarks.get(27)) && isLandmarkValid(landmarks.get(28));
-                    break;
-            }
-
-            if (!isReady) {
-                updateStatus("Stand in frame!");
-                return;
-            } else {
-                updateStatus("Counting...");
-            }
-
-            // De aici în jos este logica de unghiuri (pe care deja o ai). Modifică doar textele!
-            if (exerciseType.equals("PUSHUPS")) {
-                NormalizedLandmark shoulder = landmarks.get(12);
-                NormalizedLandmark elbow = landmarks.get(14);
-                NormalizedLandmark wrist = landmarks.get(16);
-                double armAngle = calculateAngle(shoulder, elbow, wrist);
-
-                if (armAngle > 160) {
-                    if (movementStage.equals("down")) {
-                        repCount++;
-                        runOnUiThread(() -> tvReps.setText("Reps: " + repCount));
-                        sendDataToWatch("/rep_update", String.valueOf(repCount));
-                    }
-                    movementStage = "up";
-                } else if (armAngle < 90) {
-                    movementStage = "down";
-                }
-            }
-            // ... [Adaugă restul exercițiilor (SQUATS, JUMPING_JACKS etc.) identic ca înainte, dar cu tvReps.setText("Reps: " + repCount) și sendDataToWatch]
-
-        } else {
+        if (result.landmarks().isEmpty()) {
             updateStatus("Stand in frame!");
+            return;
+        }
+
+        overlayView.setResults(result);
+        List<NormalizedLandmark> landmarks = result.landmarks().get(0);
+
+        // Identificăm care parte a corpului este vizibilă clar
+        boolean leftArmValid = isLandmarkValid(landmarks.get(11)) && isLandmarkValid(landmarks.get(13)) && isLandmarkValid(landmarks.get(15));
+        boolean rightArmValid = isLandmarkValid(landmarks.get(12)) && isLandmarkValid(landmarks.get(14)) && isLandmarkValid(landmarks.get(16));
+
+        boolean leftLegValid = isLandmarkValid(landmarks.get(23)) && isLandmarkValid(landmarks.get(25)) && isLandmarkValid(landmarks.get(27));
+        boolean rightLegValid = isLandmarkValid(landmarks.get(24)) && isLandmarkValid(landmarks.get(26)) && isLandmarkValid(landmarks.get(28));
+
+        boolean isReady = false;
+        double currentAngle = 0;
+
+        switch (exerciseType) {
+            case "PUSHUPS":
+            case "BICEP_CURLS":
+            case "SHOULDER_PRESS":
+                if (leftArmValid) {
+                    isReady = true;
+                    currentAngle = calculateAngle(landmarks.get(11), landmarks.get(13), landmarks.get(15));
+                } else if (rightArmValid) {
+                    isReady = true;
+                    currentAngle = calculateAngle(landmarks.get(12), landmarks.get(14), landmarks.get(16));
+                }
+                break;
+            case "SQUATS":
+                if (leftLegValid) {
+                    isReady = true;
+                    currentAngle = calculateAngle(landmarks.get(23), landmarks.get(25), landmarks.get(27));
+                } else if (rightLegValid) {
+                    isReady = true;
+                    currentAngle = calculateAngle(landmarks.get(24), landmarks.get(26), landmarks.get(28));
+                }
+                break;
+            case "JUMPING_JACKS":
+                // La jacks avem nevoie de o imagine de ansamblu (măcar mâinile și gleznele să fie clare)
+                isReady = leftArmValid && rightArmValid && isLandmarkValid(landmarks.get(27)) && isLandmarkValid(landmarks.get(28));
+                break;
+        }
+
+        if (!isReady) {
+            updateStatus("Stand in frame!");
+            return; // Oprește procesarea rep-ului
+        } else {
+            updateStatus("Counting...");
+        }
+
+        // Dacă ești "Ready", calculează repetările dinamic pe partea care a fost detectată!
+        if (exerciseType.equals("PUSHUPS")) {
+            if (currentAngle > 160) {
+                if (movementStage.equals("down")) incrementRep();
+                movementStage = "up";
+            } else if (currentAngle < 90) {
+                movementStage = "down";
+            }
+        }
+        else if (exerciseType.equals("SQUATS")) {
+            if (currentAngle > 160) {
+                if (movementStage.equals("down")) incrementRep();
+                movementStage = "up";
+            } else if (currentAngle < 100) {
+                movementStage = "down";
+            }
+        }
+        else if (exerciseType.equals("BICEP_CURLS")) {
+            if (currentAngle < 45) {
+                if (movementStage.equals("down")) incrementRep();
+                movementStage = "up";
+            } else if (currentAngle > 140) {
+                movementStage = "down";
+            }
+        }
+        else if (exerciseType.equals("SHOULDER_PRESS")) {
+            // Căutăm exact încheietura/umărul părții vizibile
+            NormalizedLandmark wrist = leftArmValid ? landmarks.get(15) : landmarks.get(16);
+            NormalizedLandmark shoulder = leftArmValid ? landmarks.get(11) : landmarks.get(12);
+
+            if (currentAngle > 150 && wrist.y() < shoulder.y()) {
+                if (movementStage.equals("down")) incrementRep();
+                movementStage = "up";
+            } else if (currentAngle < 100 && wrist.y() >= shoulder.y() - 0.1) {
+                movementStage = "down";
+            }
+        }
+        else if (exerciseType.equals("JUMPING_JACKS")) {
+            NormalizedLandmark leftWrist = landmarks.get(15);
+            NormalizedLandmark rightWrist = landmarks.get(16);
+            NormalizedLandmark leftShoulder = landmarks.get(11);
+            NormalizedLandmark rightShoulder = landmarks.get(12);
+            NormalizedLandmark leftAnkle = landmarks.get(27);
+            NormalizedLandmark rightAnkle = landmarks.get(28);
+
+            boolean armsUp = leftWrist.y() < leftShoulder.y() && rightWrist.y() < rightShoulder.y();
+            boolean legsApart = Math.abs(leftAnkle.x() - rightAnkle.x()) > Math.abs(leftShoulder.x() - rightShoulder.x()) * 1.5;
+
+            if (armsUp && legsApart) {
+                if (movementStage.equals("down")) incrementRep();
+                movementStage = "up";
+            } else if (!armsUp && !legsApart) {
+                movementStage = "down";
+            }
         }
     }
 
@@ -291,7 +354,7 @@ public class CameraExerciseActivity extends AppCompatActivity {
                         );
                 for (com.google.android.gms.wearable.Node node : nodes) {
                     com.google.android.gms.wearable.Wearable.getMessageClient(this).sendMessage(
-                            node.getId(), path, payload.getBytes()
+                            node.getId(), path, payload.getBytes(java.nio.charset.StandardCharsets.UTF_8)
                     );
                 }
             } catch (Exception e) { e.printStackTrace(); }
@@ -317,6 +380,8 @@ public class CameraExerciseActivity extends AppCompatActivity {
                 com.example.kangoofit.database.UserManager.getInstance().incrementStat(firebaseField, repCount);
             }
         }
+
+        sendDataToWatch("/stop_exercise_from_phone", "STOP");
         finish();
     }
 
@@ -327,25 +392,5 @@ public class CameraExerciseActivity extends AppCompatActivity {
         if (poseLandmarker != null) {
             poseLandmarker.close();
         }
-    }
-
-    private void sendRepsToWatch(int reps) {
-        new Thread(() -> {
-            try {
-                List<com.google.android.gms.wearable.Node> nodes =
-                        com.google.android.gms.tasks.Tasks.await(
-                                com.google.android.gms.wearable.Wearable.getNodeClient(this).getConnectedNodes()
-                        );
-
-                String repString = String.valueOf(reps);
-                for (com.google.android.gms.wearable.Node node : nodes) {
-                    com.google.android.gms.wearable.Wearable.getMessageClient(this).sendMessage(
-                            node.getId(), "/rep_update", repString.getBytes()
-                    );
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
     }
 }
