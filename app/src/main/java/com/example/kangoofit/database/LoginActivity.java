@@ -153,6 +153,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (!documentSnapshot.contains("jumping_jacks")) updates.put("jumping_jacks", 0);
                 if (!documentSnapshot.contains("biceps")) updates.put("biceps", 0);
                 if (!documentSnapshot.contains("umeri")) updates.put("umeri", 0);
+                if (!documentSnapshot.contains("lastExerciseTimestamp")) updates.put("lastExerciseTimestamp", 0L);
 
                 if (!updates.isEmpty()) {
                     userRef.update(updates).addOnSuccessListener(aVoid -> {

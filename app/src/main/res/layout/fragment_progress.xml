@@ -61,20 +61,6 @@
                         android:orientation="vertical"
                         android:layout_margin="20dp"
                         android:background="@android:color/transparent">
-
-                        <TextView
-                            android:id="@+id/txtState"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="State: LOADING"
-                            android:layout_marginTop="8dp"
-                            android:paddingLeft="12dp"
-                            android:paddingRight="12dp"
-                            android:paddingTop="4dp"
-                            android:paddingBottom="4dp"
-                            android:background="@drawable/bg_badge"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"/>
                     </LinearLayout>
                 </FrameLayout>
             </androidx.cardview.widget.CardView>

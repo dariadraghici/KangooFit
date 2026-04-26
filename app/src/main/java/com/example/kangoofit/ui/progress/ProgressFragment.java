@@ -27,7 +27,6 @@ public class ProgressFragment extends Fragment {
     private TextView txtPasi;
     private TextView txtFlotari;
     private TextView txtGenoflexiuni;
-    private TextView txtState;
     private ImageView imgMascota; // Variabilă pentru imaginea de banner
 
     private LinearLayout containerLeaderboard;
@@ -47,7 +46,6 @@ public class ProgressFragment extends Fragment {
         txtPasi = view.findViewById(R.id.txtPasi);
         txtFlotari = view.findViewById(R.id.txtFlotari);
         txtGenoflexiuni = view.findViewById(R.id.txtGenoflexiuni);
-        txtState = view.findViewById(R.id.txtState);
         imgMascota = view.findViewById(R.id.imgMascota); // ID-ul din XML-ul tău
 
         // 2. Configurări inițiale
@@ -81,8 +79,6 @@ public class ProgressFragment extends Fragment {
 
                     // Actualizăm starea (HAPPY, NEUTRAL, SAD)
 
-
-                    txtState.setText("");
 
                     // Reîncărcăm leaderboard-ul când se schimbă datele
                     loadLeaderboard();
