@@ -69,8 +69,15 @@ public class ProgressFragment extends Fragment {
                     }
 
                     // --- LOGICA CALORII ---
-                    // Calculăm caloriile conform formulei tale
-                    caloriiActuale = (int) ((user.pasi * 0.04) + (user.flotari * 0.5) + (user.genoflexiuni * 0.4));
+                    // Formula actualizată cu toate exercițiile
+                    caloriiActuale = (int) (
+                            (user.pasi * 0.04) +
+                                    (user.flotari * 0.5) +
+                                    (user.genoflexiuni * 0.4) +
+                                    (user.jumping_jacks * 0.2) +
+                                    (user.biceps * 0.15) +
+                                    (user.umeri * 0.15)
+                    );
 
                     progressBarCalorii.setMax(targetCaloriiStatic);
                     progressBarCalorii.setProgress(caloriiActuale);
